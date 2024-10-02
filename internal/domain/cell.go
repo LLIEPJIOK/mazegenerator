@@ -1,11 +1,5 @@
 package domain
 
-import (
-	"io"
-
-	"github.com/fatih/color"
-)
-
 type CellType int
 
 const (
@@ -14,19 +8,20 @@ const (
 	Guessing
 )
 
-func (c CellType) Print(writer io.Writer) {
-	var clr *color.Color
-
+func (c CellType) String() string {
 	switch c {
 	case Wall:
-		clr = color.New(color.BgBlack)
+		// ANSI код для черного фона
+		return "\x1b[40m  \x1b[0m"
 	case Passage:
-		clr = color.New(color.BgWhite)
+		// ANSI код для белого фона
+		return "\x1b[47m  \x1b[0m"
 	case Guessing:
-		clr = color.New(color.BgHiBlack)
+		// ANSI код для серого фона
+		return "\x1b[100m  \x1b[0m"
 	}
 
-	clr.Fprint(writer, "  ")
+	return ""
 }
 
 type CellRenderData struct {

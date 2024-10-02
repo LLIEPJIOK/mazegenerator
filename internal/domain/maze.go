@@ -1,30 +1,59 @@
 package domain
 
-import (
-	"fmt"
-	"io"
-)
-
 type Maze struct {
 	Height int
 	Width  int
 	Cells  [][]CellType
 }
 
-func NewMaze(height, width int, cells [][]CellType) *Maze {
-	return &Maze{
+func NewMaze(height, width int, cells [][]CellType) Maze {
+	return Maze{
 		Height: height,
 		Width:  width,
 		Cells:  cells,
 	}
 }
 
-func (m *Maze) Print(writer io.Writer) {
-	for i := range m.Height {
-		for j := range m.Width {
-			m.Cells[i][j].Print(writer)
+type DrawingMaze struct {
+	cells [][]map[int]CellType
+}
+
+func NewDrawingMaze(height, width int) DrawingMaze {
+	cells := make([][]map[int]CellType, height)
+
+	for i := range height {
+		cells[i] = make([]map[int]CellType, width)
+		for j := range width {
+			cells[i][j] = make(map[int]CellType)
+		}
+	}
+
+	return DrawingMaze{
+		cells: cells,
+	}
+}
+
+func (dm *DrawingMaze) GetCellType(x, y int) CellType {
+	switch len(dm.cells[x][y]) {
+	case 0:
+		return Wall
+	case 1:
+		for _, v := range dm.cells[x][y] {
+			return v
+		}
+	}
+
+	return Guessing
+}
+
+func (dm *DrawingMaze) AddCellType(cellData CellRenderData) {
+	if cellData.Tpe == Wall {
+		delete(dm.cells[cellData.X][cellData.Y], cellData.SenderID)
+	} else {
+		if cellData.SenderID == 0 {
+			clear(dm.cells[cellData.X][cellData.Y])
 		}
 
-		fmt.Fprintln(writer)
+		dm.cells[cellData.X][cellData.Y][cellData.SenderID] = cellData.Tpe
 	}
 }

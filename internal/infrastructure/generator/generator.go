@@ -14,7 +14,7 @@ type Generator struct {
 	dirY []int
 }
 
-func NewGenerator() *Generator {
+func New() *Generator {
 	return &Generator{
 		dirX: []int{-1, 1, 0, 0},
 		dirY: []int{0, 0, -1, 1},
@@ -23,7 +23,7 @@ func NewGenerator() *Generator {
 
 func (g *Generator) createMazeFromCoord(
 	height, width int,
-	startCoord domain.Coord,
+	start domain.Coord,
 	drawingChan chan<- domain.CellRenderData,
 	processID int,
 ) ([][]domain.CellType, error) {
@@ -36,7 +36,7 @@ func (g *Generator) createMazeFromCoord(
 	waitList := make([]domain.Coord, 0)
 
 	for i := range len(g.dirX) {
-		nx, ny := startCoord.X+g.dirX[i], startCoord.Y+g.dirY[i]
+		nx, ny := start.X+g.dirX[i], start.Y+g.dirY[i]
 		if min(nx, ny) < 0 || nx >= height || ny >= width {
 			continue
 		}
@@ -44,8 +44,8 @@ func (g *Generator) createMazeFromCoord(
 		waitList = append(waitList, domain.NewCoord(nx, ny))
 	}
 
-	maze[startCoord.X][startCoord.Y] = domain.Passage
-	drawingChan <- domain.NewCellRenderData(startCoord.X, startCoord.Y, domain.Passage, processID, 3000)
+	maze[start.X][start.Y] = domain.Passage
+	drawingChan <- domain.NewCellRenderData(start.X, start.Y, domain.Passage, processID, 3000)
 
 	for len(waitList) != 0 {
 		randID, err := rand.Int(rand.Reader, big.NewInt(int64(len(waitList))))
@@ -85,7 +85,7 @@ func (g *Generator) createMazeFromCoord(
 
 func (g *Generator) clearDeadEnd(
 	maze [][]domain.CellType,
-	startCoord domain.Coord,
+	start domain.Coord,
 	drawingChan chan<- domain.CellRenderData,
 	processID int,
 ) [][]domain.CellType {
@@ -110,7 +110,7 @@ func (g *Generator) clearDeadEnd(
 				}
 			}
 
-			if cntPassages == 1 && (i != startCoord.X || j != startCoord.Y) {
+			if cntPassages == 1 && (i != start.X || j != start.Y) {
 				newMaze[i][j] = domain.Wall
 				drawingChan <- domain.NewCellRenderData(i, j, domain.Wall, processID, 100)
 			} else {
@@ -126,23 +126,25 @@ const clearDeadEndNumber = 10
 
 func (g *Generator) generateMazeFromPoint(
 	height, width int,
-	startCoord domain.Coord,
+	start domain.Coord,
 	drawingChan chan<- domain.CellRenderData,
 	processID int,
 ) ([][]domain.CellType, error) {
-	maze, err := g.createMazeFromCoord(height, width, startCoord, drawingChan, processID)
+	maze, err := g.createMazeFromCoord(height, width, start, drawingChan, processID)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"g.createMazeFromCoord(%d, %d, %#v): %w",
 			height,
 			width,
-			startCoord,
+			start,
 			err,
 		)
 	}
 
+	// remove dead end cells
+	// minimum is needed so as not to remove all the cells if the sizes are small
 	for range min(clearDeadEndNumber, min(height, width)-1) {
-		maze = g.clearDeadEnd(maze, startCoord, drawingChan, processID)
+		maze = g.clearDeadEnd(maze, start, drawingChan, processID)
 	}
 
 	return maze, nil
@@ -176,7 +178,7 @@ func (g *Generator) GenerateMaze(
 	height, width int,
 	start, end domain.Coord,
 	drawingChan chan<- domain.CellRenderData,
-) (*domain.Maze, error) {
+) (domain.Maze, error) {
 	eg := &errgroup.Group{}
 
 	var startMaze, endMaze [][]domain.CellType
@@ -204,7 +206,7 @@ func (g *Generator) GenerateMaze(
 	})
 
 	if err := eg.Wait(); err != nil {
-		return nil, fmt.Errorf("errgroup: %w", err)
+		return domain.Maze{}, fmt.Errorf("errgroup: %w", err)
 	}
 
 	maze := mergeMazes(startMaze, endMaze, drawingChan, 0)

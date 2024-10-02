@@ -23,7 +23,7 @@ func Start() error {
 		paint.Paint(context.Background(), ch)
 	}()
 
-	gen := generator.NewGenerator()
+	gen := generator.New()
 
 	_, err := gen.GenerateMaze(35, 70, domain.NewCoord(0, 0), domain.NewCoord(0, 69), ch)
 	if err != nil {
