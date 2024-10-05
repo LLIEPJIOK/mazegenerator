@@ -1,13 +1,13 @@
 package domain
 
 type Coord struct {
-	X int
-	Y int
+	RowID int
+	ColID int
 }
 
-func NewCoord(x, y int) Coord {
+func NewCoord(rowID, colID int) Coord {
 	return Coord{
-		X: x,
-		Y: y,
+		RowID: rowID,
+		ColID: colID,
 	}
 }

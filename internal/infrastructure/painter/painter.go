@@ -29,34 +29,46 @@ func clearScreen() {
 	fmt.Print("\033[2J")
 }
 
-func (p *Painter) moveCursor(x, y int) {
-	fmt.Fprintf(p.out, "\033[%d;%dH", x+2, 2*(y+1)+1)
+func (p *Painter) moveCursor(rowID, colID int) {
+	fmt.Fprintf(p.out, "\033[%d;%dH", rowID+2, 2*(colID+1)+1)
 }
 
-func (p *Painter) paint(x, y int, cellType domain.CellType) {
-	p.moveCursor(x, y)
+func (p *Painter) paint(rowID, colID int, cellType domain.CellType) {
+	p.moveCursor(rowID, colID)
 	fmt.Fprint(p.out, cellType)
 }
 
-func (p *Painter) Paint(ctx context.Context, in <-chan domain.CellRenderData) {
+func (p *Painter) PaintGeneration(ctx context.Context, cellChan <-chan domain.CellRenderData) {
 	clearScreen()
 
 	defer func() {
-		p.moveCursor(p.height-1, p.width+2)
+		p.moveCursor(p.height+1, -1)
 	}()
 
 	for {
 		select {
-		case cellData, ok := <-in:
+		case cellData, ok := <-cellChan:
 			if !ok {
 				return
 			}
 
 			p.drawMaze.AddCellType(cellData)
-			p.paint(cellData.X, cellData.Y, p.drawMaze.GetCellType(cellData.X, cellData.Y))
+			p.paint(cellData.RowID, cellData.ColID, p.drawMaze.GetCellType(cellData.RowID, cellData.ColID))
 			time.Sleep(time.Duration(cellData.MCS) * time.Microsecond)
 		case <-ctx.Done():
 			return
 		}
+	}
+}
+
+func (p *Painter) PaintPath(path []domain.Coord, delay time.Duration) {
+	defer func() {
+		p.moveCursor(p.height+1, -1)
+	}()
+
+	for _, v := range path {
+		p.paint(v.RowID, v.ColID, domain.Path)
+
+		time.Sleep(delay)
 	}
 }

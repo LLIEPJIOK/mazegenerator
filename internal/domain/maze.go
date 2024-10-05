@@ -48,12 +48,12 @@ func (dm *DrawingMaze) GetCellType(x, y int) CellType {
 
 func (dm *DrawingMaze) AddCellType(cellData CellRenderData) {
 	if cellData.Tpe == Wall {
-		delete(dm.cells[cellData.X][cellData.Y], cellData.SenderID)
+		delete(dm.cells[cellData.RowID][cellData.ColID], cellData.SenderID)
 	} else {
 		if cellData.SenderID == 0 {
-			clear(dm.cells[cellData.X][cellData.Y])
+			clear(dm.cells[cellData.RowID][cellData.ColID])
 		}
 
-		dm.cells[cellData.X][cellData.Y][cellData.SenderID] = cellData.Tpe
+		dm.cells[cellData.RowID][cellData.ColID][cellData.SenderID] = cellData.Tpe
 	}
 }

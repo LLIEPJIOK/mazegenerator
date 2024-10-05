@@ -10,14 +10,14 @@ import (
 )
 
 type Generator struct {
-	dirX []int
-	dirY []int
+	dirRow []int
+	dirCol []int
 }
 
 func New() *Generator {
 	return &Generator{
-		dirX: []int{-1, 1, 0, 0},
-		dirY: []int{0, 0, -1, 1},
+		dirRow: []int{-1, 1, 0, 0},
+		dirCol: []int{0, 0, -1, 1},
 	}
 }
 
@@ -35,17 +35,17 @@ func (g *Generator) createMazeFromCoord(
 
 	waitList := make([]domain.Coord, 0)
 
-	for i := range len(g.dirX) {
-		nx, ny := start.X+g.dirX[i], start.Y+g.dirY[i]
-		if min(nx, ny) < 0 || nx >= height || ny >= width {
+	for i := range len(g.dirRow) {
+		newRowID, newColID := start.RowID+g.dirRow[i], start.ColID+g.dirCol[i]
+		if min(newRowID, newColID) < 0 || newRowID >= height || newColID >= width {
 			continue
 		}
 
-		waitList = append(waitList, domain.NewCoord(nx, ny))
+		waitList = append(waitList, domain.NewCoord(newRowID, newColID))
 	}
 
-	maze[start.X][start.Y] = domain.Passage
-	drawingChan <- domain.NewCellRenderData(start.X, start.Y, domain.Passage, processID, 3000)
+	maze[start.RowID][start.ColID] = domain.Passage
+	drawingChan <- domain.NewCellRenderData(start.RowID, start.ColID, domain.Passage, processID, 3000)
 
 	for len(waitList) != 0 {
 		randID, err := rand.Int(rand.Reader, big.NewInt(int64(len(waitList))))
@@ -59,15 +59,15 @@ func (g *Generator) createMazeFromCoord(
 
 		cntWalls, cntBorders := 0, 0
 
-		for i := range g.dirX {
-			nx, ny := randCoord.X+g.dirX[i], randCoord.Y+g.dirY[i]
-			if min(nx, ny) < 0 || nx >= height || ny >= width {
+		for i := range g.dirRow {
+			newRowID, newColID := randCoord.RowID+g.dirRow[i], randCoord.ColID+g.dirCol[i]
+			if min(newRowID, newColID) < 0 || newRowID >= height || newColID >= width {
 				cntBorders++
 				continue
 			}
 
-			if maze[nx][ny] == domain.Wall {
-				waitList = append(waitList, domain.NewCoord(nx, ny))
+			if maze[newRowID][newColID] == domain.Wall {
+				waitList = append(waitList, domain.NewCoord(newRowID, newColID))
 				cntWalls++
 			}
 		}
@@ -75,8 +75,8 @@ func (g *Generator) createMazeFromCoord(
 		if cntWalls+cntBorders < 3 {
 			waitList = waitList[:len(waitList)-cntWalls]
 		} else {
-			maze[randCoord.X][randCoord.Y] = domain.Passage
-			drawingChan <- domain.NewCellRenderData(randCoord.X, randCoord.Y, domain.Passage, processID, 3000)
+			maze[randCoord.RowID][randCoord.ColID] = domain.Passage
+			drawingChan <- domain.NewCellRenderData(randCoord.RowID, randCoord.ColID, domain.Passage, processID, 3000)
 		}
 	}
 
@@ -99,18 +99,18 @@ func (g *Generator) clearDeadEnd(
 		for j := range width {
 			cntPassages := 0
 
-			for k := range g.dirX {
-				nx, ny := i+g.dirX[k], j+g.dirY[k]
-				if min(nx, ny) < 0 || nx >= height || ny >= width {
+			for k := range g.dirRow {
+				newRowID, newColID := i+g.dirRow[k], j+g.dirCol[k]
+				if min(newRowID, newColID) < 0 || newRowID >= height || newColID >= width {
 					continue
 				}
 
-				if maze[nx][ny] == domain.Passage {
+				if maze[newRowID][newColID] == domain.Passage {
 					cntPassages++
 				}
 			}
 
-			if cntPassages == 1 && (i != start.X || j != start.Y) {
+			if cntPassages == 1 && (i != start.RowID || j != start.ColID) {
 				newMaze[i][j] = domain.Wall
 				drawingChan <- domain.NewCellRenderData(i, j, domain.Wall, processID, 100)
 			} else {
@@ -141,7 +141,6 @@ func (g *Generator) generateMazeFromPoint(
 		)
 	}
 
-	// remove dead end cells
 	// minimum is needed so as not to remove all the cells if the sizes are small
 	for range min(clearDeadEndNumber, min(height, width)-1) {
 		maze = g.clearDeadEnd(maze, start, drawingChan, processID)
