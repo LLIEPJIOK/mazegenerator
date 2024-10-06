@@ -83,7 +83,7 @@ func TestGenerateMaze(t *testing.T) {
 	gen := generator.New()
 
 	for i, testCase := range testCases {
-		t.Run(fmt.Sprintf("%d", i+1), func(t *testing.T) {
+		t.Run(fmt.Sprintf("#%d", i+1), func(t *testing.T) {
 			t.Parallel()
 
 			var maze domain.Maze

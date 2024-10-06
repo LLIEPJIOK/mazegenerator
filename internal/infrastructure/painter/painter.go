@@ -10,40 +10,37 @@ import (
 )
 
 type Painter struct {
-	height   int
-	width    int
 	out      io.Writer
 	drawMaze domain.DrawingMaze
 }
 
-func New(height, width int, out io.Writer) *Painter {
+func New(out io.Writer) *Painter {
 	return &Painter{
-		height:   height,
-		width:    width,
-		out:      out,
-		drawMaze: domain.NewDrawingMaze(height, width),
+		out: out,
 	}
 }
 
-func clearScreen() {
+func ClearScreen() {
 	fmt.Print("\033[2J")
 }
 
-func (p *Painter) moveCursor(rowID, colID int) {
+func (p *Painter) MoveCursor(rowID, colID int) {
 	fmt.Fprintf(p.out, "\033[%d;%dH", rowID+2, 2*(colID+1)+1)
 }
 
 func (p *Painter) paint(rowID, colID int, cellType domain.CellType) {
-	p.moveCursor(rowID, colID)
+	p.MoveCursor(rowID, colID)
 	fmt.Fprint(p.out, cellType)
 }
 
-func (p *Painter) PaintGeneration(ctx context.Context, cellChan <-chan domain.CellRenderData) {
-	clearScreen()
+func (p *Painter) PaintGeneration(
+	ctx context.Context,
+	mazeHeight, mazeWidth int,
+	cellChan <-chan domain.CellRenderData,
+) {
+	ClearScreen()
 
-	defer func() {
-		p.moveCursor(p.height+1, -1)
-	}()
+	p.drawMaze = domain.NewDrawingMaze(mazeHeight, mazeWidth)
 
 	for {
 		select {
@@ -53,7 +50,11 @@ func (p *Painter) PaintGeneration(ctx context.Context, cellChan <-chan domain.Ce
 			}
 
 			p.drawMaze.AddCellType(cellData)
-			p.paint(cellData.RowID, cellData.ColID, p.drawMaze.GetCellType(cellData.RowID, cellData.ColID))
+			p.paint(
+				cellData.RowID,
+				cellData.ColID,
+				p.drawMaze.GetCellType(cellData.RowID, cellData.ColID),
+			)
 			time.Sleep(time.Duration(cellData.MCS) * time.Microsecond)
 		case <-ctx.Done():
 			return
@@ -62,10 +63,6 @@ func (p *Painter) PaintGeneration(ctx context.Context, cellChan <-chan domain.Ce
 }
 
 func (p *Painter) PaintPath(path []domain.Coord, delay time.Duration) {
-	defer func() {
-		p.moveCursor(p.height+1, -1)
-	}()
-
 	for _, v := range path {
 		p.paint(v.RowID, v.ColID, domain.Path)
 

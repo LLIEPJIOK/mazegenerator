@@ -5,16 +5,12 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/es-debug/backend-academy-2024-go-template/internal/domain"
-	"github.com/es-debug/backend-academy-2024-go-template/internal/infrastructure/generator"
-	"github.com/es-debug/backend-academy-2024-go-template/internal/infrastructure/painter"
-	"github.com/es-debug/backend-academy-2024-go-template/internal/infrastructure/pathfinder"
 )
 
 const greetingMessage = `Welcome to the Maze Generator! The program generates a maze and a path for the shortest passage.
@@ -29,6 +25,30 @@ Enjoy the program!
 
 `
 
+type Generator interface {
+	GenerateMaze(
+		height, width int,
+		start, end domain.Coord,
+		drawingChan chan<- domain.CellRenderData,
+	) (domain.Maze, error)
+}
+
+type Painter interface {
+	PaintGeneration(
+		ctx context.Context,
+		mazeHeight, mazeWidth int,
+		cellChan <-chan domain.CellRenderData,
+	)
+
+	PaintPath(path []domain.Coord, delay time.Duration)
+
+	MoveCursor(rowID, colID int)
+}
+
+type PathFinder interface {
+	FindPath(maze domain.Maze, start, end domain.Coord) ([]domain.Coord, bool)
+}
+
 type UI struct {
 	in         io.Reader
 	out        io.Writer
@@ -36,12 +56,18 @@ type UI struct {
 	mazeWidth  int
 	start      domain.Coord
 	end        domain.Coord
+	gen        Generator
+	painter    Painter
+	pathFinder PathFinder
 }
 
-func NewUI(in io.Reader, out io.Writer) *UI {
+func NewUI(in io.Reader, out io.Writer, gen Generator, painter Painter, pathFinder PathFinder) *UI {
 	return &UI{
-		in:  in,
-		out: out,
+		in:         in,
+		out:        out,
+		gen:        gen,
+		painter:    painter,
+		pathFinder: pathFinder,
 	}
 }
 
@@ -60,7 +86,11 @@ func (ui *UI) getInt(scan *bufio.Scanner, rng domain.Range) (int, error) {
 			fmt.Fprintf(ui.out, "\033[31mError: %s.\033[0m\nType a single integer: ", err)
 		case !rng.Contains(inputInt):
 			// ANSI code for red letters
-			fmt.Fprintf(ui.out, "\033[31mError: Integer should be in range %s.\033[0m\nType a valid integer: ", rng)
+			fmt.Fprintf(
+				ui.out,
+				"\033[31mError: Integer should be in range %s.\033[0m\nType a valid integer: ",
+				rng,
+			)
 		default:
 			return inputInt, nil
 		}
@@ -205,19 +235,15 @@ func (ui *UI) Run() error {
 	}
 
 	ch := make(chan domain.CellRenderData)
-
-	paint := painter.New(ui.mazeHeight, ui.mazeWidth, os.Stdout)
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 
 	go func() {
 		defer wg.Done()
-		paint.PaintGeneration(context.Background(), ch)
+		ui.painter.PaintGeneration(context.Background(), ui.mazeHeight, ui.mazeWidth, ch)
 	}()
 
-	gen := generator.New()
-
-	maze, err := gen.GenerateMaze(
+	maze, err := ui.gen.GenerateMaze(
 		ui.mazeHeight,
 		ui.mazeWidth,
 		ui.start,
@@ -231,12 +257,14 @@ func (ui *UI) Run() error {
 	close(ch)
 	wg.Wait()
 
-	pathFinder := pathfinder.New()
-	if path, ok := pathFinder.FindPath(maze, ui.start, ui.end); ok {
-		paint.PaintPath(path, 20*time.Millisecond)
+	if path, ok := ui.pathFinder.FindPath(maze, ui.start, ui.end); ok {
+		ui.painter.PaintPath(path, 20*time.Millisecond)
 	} else {
+		ui.painter.MoveCursor(ui.mazeHeight+1, 0)
 		fmt.Println("No path in this maze")
 	}
+
+	ui.painter.MoveCursor(ui.mazeHeight+2, 0)
 
 	return nil
 }
