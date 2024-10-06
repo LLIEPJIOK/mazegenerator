@@ -9,6 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func squareDist(first, second domain.Coord) int {
+	dRow, dCol := first.RowID-second.RowID, first.ColID-second.ColID
+
+	return dRow*dRow + dCol*dCol
+}
+
 func TestFindPathIfPathExists(t *testing.T) {
 	testCases := []struct {
 		height       int
@@ -143,6 +149,8 @@ func TestFindPathIfPathExists(t *testing.T) {
 					maze.Cells[coord.RowID][coord.ColID],
 					"path mustn't go throw",
 				)
+
+				require.Equal(t, 1, squareDist(path[i-1], path[i]))
 
 				dist += int(maze.Cells[coord.RowID][coord.ColID])
 			}
