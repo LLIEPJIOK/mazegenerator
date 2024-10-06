@@ -24,12 +24,12 @@ func ClearScreen() {
 	fmt.Print("\033[2J")
 }
 
-func (p *Painter) MoveCursor(rowID, colID int) {
-	fmt.Fprintf(p.out, "\033[%d;%dH", rowID+2, 2*(colID+1)+1)
+func (p *Painter) MoveCursor(row, col int) {
+	fmt.Fprintf(p.out, "\033[%d;%dH", row+2, 2*(col+1)+1)
 }
 
-func (p *Painter) paint(rowID, colID int, cellType domain.CellType) {
-	p.MoveCursor(rowID, colID)
+func (p *Painter) paint(row, col int, cellType domain.CellType) {
+	p.MoveCursor(row, col)
 	fmt.Fprint(p.out, cellType)
 }
 
@@ -51,11 +51,11 @@ func (p *Painter) PaintGeneration(
 
 			p.drawMaze.AddCellType(cellData)
 			p.paint(
-				cellData.RowID,
-				cellData.ColID,
-				p.drawMaze.GetCellType(cellData.RowID, cellData.ColID),
+				cellData.Row,
+				cellData.Col,
+				p.drawMaze.GetCellType(cellData.Row, cellData.Col),
 			)
-			time.Sleep(time.Duration(cellData.MCS) * time.Microsecond)
+			time.Sleep(cellData.Delay)
 		case <-ctx.Done():
 			return
 		}
@@ -64,7 +64,7 @@ func (p *Painter) PaintGeneration(
 
 func (p *Painter) PaintPath(path []domain.Coord, delay time.Duration) {
 	for _, v := range path {
-		p.paint(v.RowID, v.ColID, domain.Path)
+		p.paint(v.Row, v.Col, domain.Path)
 
 		time.Sleep(delay)
 	}

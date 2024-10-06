@@ -23,60 +23,68 @@ func TestGenerateMaze(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		height int
-		width  int
-		start  domain.Coord
-		end    domain.Coord
-		ch     chan domain.CellRenderData
+		height    int
+		width     int
+		start     domain.Coord
+		end       domain.Coord
+		algorithm generator.Algorithm
+		ch        chan domain.CellRenderData
 	}{
 		{
-			height: 5,
-			width:  5,
-			start:  domain.NewCoord(0, 0),
-			end:    domain.NewCoord(0, 4),
-			ch:     make(chan domain.CellRenderData),
+			height:    5,
+			width:     5,
+			start:     domain.NewCoord(0, 0),
+			end:       domain.NewCoord(0, 4),
+			algorithm: generator.NewBacktrack(),
+			ch:        make(chan domain.CellRenderData),
 		},
 		{
-			height: 10,
-			width:  10,
-			start:  domain.NewCoord(0, 0),
-			end:    domain.NewCoord(9, 9),
-			ch:     make(chan domain.CellRenderData),
+			height:    10,
+			width:     10,
+			start:     domain.NewCoord(0, 0),
+			end:       domain.NewCoord(9, 9),
+			algorithm: generator.NewPrim(),
+			ch:        make(chan domain.CellRenderData),
 		},
 		{
-			height: 7,
-			width:  7,
-			start:  domain.NewCoord(0, 3),
-			end:    domain.NewCoord(6, 3),
-			ch:     make(chan domain.CellRenderData),
+			height:    7,
+			width:     7,
+			start:     domain.NewCoord(0, 3),
+			end:       domain.NewCoord(6, 3),
+			algorithm: generator.NewBacktrack(),
+			ch:        make(chan domain.CellRenderData),
 		},
 		{
-			height: 6,
-			width:  8,
-			start:  domain.NewCoord(0, 7),
-			end:    domain.NewCoord(5, 0),
-			ch:     make(chan domain.CellRenderData),
+			height:    6,
+			width:     8,
+			start:     domain.NewCoord(0, 7),
+			end:       domain.NewCoord(5, 0),
+			algorithm: generator.NewPrim(),
+			ch:        make(chan domain.CellRenderData),
 		},
 		{
-			height: 8,
-			width:  8,
-			start:  domain.NewCoord(7, 0),
-			end:    domain.NewCoord(7, 7),
-			ch:     make(chan domain.CellRenderData),
+			height:    8,
+			width:     8,
+			start:     domain.NewCoord(7, 0),
+			end:       domain.NewCoord(7, 7),
+			algorithm: generator.NewBacktrack(),
+			ch:        make(chan domain.CellRenderData),
 		},
 		{
-			height: 12,
-			width:  12,
-			start:  domain.NewCoord(0, 6),
-			end:    domain.NewCoord(11, 11),
-			ch:     make(chan domain.CellRenderData),
+			height:    12,
+			width:     12,
+			start:     domain.NewCoord(0, 6),
+			algorithm: generator.NewPrim(),
+			end:       domain.NewCoord(11, 11),
+			ch:        make(chan domain.CellRenderData),
 		},
 		{
-			height: 15,
-			width:  10,
-			start:  domain.NewCoord(14, 0),
-			end:    domain.NewCoord(14, 9),
-			ch:     make(chan domain.CellRenderData),
+			height:    15,
+			width:     10,
+			start:     domain.NewCoord(14, 0),
+			end:       domain.NewCoord(14, 9),
+			algorithm: generator.NewBacktrack(),
+			ch:        make(chan domain.CellRenderData),
 		},
 	}
 
@@ -92,7 +100,14 @@ func TestGenerateMaze(t *testing.T) {
 
 			go func() {
 				defer close(testCase.ch)
-				maze, err = gen.GenerateMaze(testCase.height, testCase.width, testCase.start, testCase.end, testCase.ch)
+				maze, err = gen.GenerateMaze(
+					testCase.height,
+					testCase.width,
+					testCase.start,
+					testCase.end,
+					testCase.algorithm,
+					testCase.ch,
+				)
 			}()
 
 			drawMaze := domain.NewDrawingMaze(testCase.height, testCase.width)

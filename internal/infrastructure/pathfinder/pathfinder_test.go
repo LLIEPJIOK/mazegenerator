@@ -10,12 +10,14 @@ import (
 )
 
 func squareDist(first, second domain.Coord) int {
-	dRow, dCol := first.RowID-second.RowID, first.ColID-second.ColID
+	dRow, dCol := first.Row-second.Row, first.Col-second.Col
 
 	return dRow*dRow + dCol*dCol
 }
 
 func TestFindPathIfPathExists(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		height       int
 		width        int
@@ -131,6 +133,8 @@ func TestFindPathIfPathExists(t *testing.T) {
 
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("#%d", i+1), func(t *testing.T) {
+			t.Parallel()
+
 			maze := domain.NewMaze(testCase.height, testCase.width, testCase.cells)
 			path, ok := pathFinder.FindPath(maze, testCase.start, testCase.end)
 
@@ -146,13 +150,13 @@ func TestFindPathIfPathExists(t *testing.T) {
 				require.NotEqual(
 					t,
 					domain.Wall,
-					maze.Cells[coord.RowID][coord.ColID],
+					maze.Cells[coord.Row][coord.Col],
 					"path mustn't go throw",
 				)
 
 				require.Equal(t, 1, squareDist(path[i-1], path[i]))
 
-				dist += int(maze.Cells[coord.RowID][coord.ColID])
+				dist += int(maze.Cells[coord.Row][coord.Col])
 			}
 
 			require.Equalf(

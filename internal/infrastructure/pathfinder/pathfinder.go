@@ -102,16 +102,16 @@ func (p *PathFinder) FindPath(maze domain.Maze, start, end domain.Coord) ([]doma
 
 		for i := range p.dirCol {
 			dRow, dCol := p.dirRow[i], p.dirCol[i]
-			newRowID, newColID := curItem.curCoord.RowID+dRow, curItem.curCoord.ColID+dCol
+			newRow, newCol := curItem.curCoord.Row+dRow, curItem.curCoord.Col+dCol
 
-			if min(newColID, newRowID) >= 0 && newRowID < maze.Height && newColID < maze.Width &&
-				maze.Cells[newRowID][newColID] != domain.Wall {
+			if min(newCol, newRow) >= 0 && newRow < maze.Height && newCol < maze.Width &&
+				maze.Cells[newRow][newCol] != domain.Wall {
 				heap.Push(
 					&pq,
 					newQueueItem(
-						domain.NewCoord(newRowID, newColID),
+						domain.NewCoord(newRow, newCol),
 						curItem.curCoord,
-						curItem.dist+int(maze.Cells[newRowID][newColID]),
+						curItem.dist+int(maze.Cells[newRow][newCol]),
 					),
 				)
 			}

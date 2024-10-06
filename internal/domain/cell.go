@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 type CellType int
 
 const (
@@ -29,19 +31,19 @@ func (c CellType) String() string {
 }
 
 type CellRenderData struct {
-	RowID    int
-	ColID    int
+	Row      int
+	Col      int
 	Tpe      CellType
 	SenderID int
-	MCS      int
+	Delay    time.Duration
 }
 
-func NewCellRenderData(x, y int, tpe CellType, senderID, ms int) CellRenderData {
+func NewCellRenderData(row, col int, tpe CellType, senderID int, delay time.Duration) CellRenderData {
 	return CellRenderData{
-		RowID:    x,
-		ColID:    y,
+		Row:      row,
+		Col:      col,
 		Tpe:      tpe,
 		SenderID: senderID,
-		MCS:      ms,
+		Delay:    delay,
 	}
 }

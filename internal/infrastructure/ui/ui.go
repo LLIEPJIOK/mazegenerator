@@ -11,6 +11,9 @@ import (
 	"time"
 
 	"github.com/es-debug/backend-academy-2024-go-template/internal/domain"
+	"github.com/es-debug/backend-academy-2024-go-template/internal/infrastructure/generator"
+	"github.com/es-debug/backend-academy-2024-go-template/internal/infrastructure/painter"
+	"github.com/es-debug/backend-academy-2024-go-template/internal/infrastructure/pathfinder"
 )
 
 const greetingMessage = `Welcome to the Maze Generator! The program generates a maze and a path for the shortest passage.
@@ -24,14 +27,6 @@ Before we start, please keep the following in mind:
 Enjoy the program!
 
 `
-
-type Generator interface {
-	GenerateMaze(
-		height, width int,
-		start, end domain.Coord,
-		drawingChan chan<- domain.CellRenderData,
-	) (domain.Maze, error)
-}
 
 type Painter interface {
 	PaintGeneration(
@@ -56,18 +51,12 @@ type UI struct {
 	mazeWidth  int
 	start      domain.Coord
 	end        domain.Coord
-	gen        Generator
-	painter    Painter
-	pathFinder PathFinder
 }
 
-func NewUI(in io.Reader, out io.Writer, gen Generator, painter Painter, pathFinder PathFinder) *UI {
+func New(in io.Reader, out io.Writer) *UI {
 	return &UI{
-		in:         in,
-		out:        out,
-		gen:        gen,
-		painter:    painter,
-		pathFinder: pathFinder,
+		in:  in,
+		out: out,
 	}
 }
 
@@ -138,7 +127,7 @@ func (ui *UI) getPoint(scan *bufio.Scanner, pointName string) (domain.Coord, err
 		return domain.Coord{}, fmt.Errorf("create range: %w", err)
 	}
 
-	coord.RowID, err = ui.getInt(scan, rng)
+	coord.Row, err = ui.getInt(scan, rng)
 	if err != nil {
 		return domain.Coord{}, fmt.Errorf(
 			"read %s point row id from input stream: %w",
@@ -157,7 +146,7 @@ func (ui *UI) getPoint(scan *bufio.Scanner, pointName string) (domain.Coord, err
 		return domain.Coord{}, fmt.Errorf("create range: %w", err)
 	}
 
-	coord.ColID, err = ui.getInt(scan, rng)
+	coord.Col, err = ui.getInt(scan, rng)
 	if err != nil {
 		return domain.Coord{}, fmt.Errorf(
 			"read %s point col id from input stream: %w",
@@ -178,8 +167,8 @@ func (ui *UI) getStartAndEndPoints(scan *bufio.Scanner) error {
 			return fmt.Errorf("get start point: %w", err)
 		}
 
-		if ui.start.RowID != 0 && ui.start.RowID != ui.mazeHeight-1 && ui.start.ColID != 0 &&
-			ui.start.ColID != ui.mazeWidth-1 {
+		if ui.start.Row != 0 && ui.start.Row != ui.mazeHeight-1 && ui.start.Col != 0 &&
+			ui.start.Col != ui.mazeWidth-1 {
 			fmt.Fprintln(
 				ui.out,
 				"\033[31mError: start point must lie on the boundary.\033[0m\nType correct start point!",
@@ -202,7 +191,7 @@ EndPointLoop:
 				ui.out,
 				"\033[31mError: start and end points are equal.\033[0m\nType correct end point!",
 			)
-		case ui.end.RowID != 0 && ui.end.RowID != ui.mazeWidth-1 && ui.end.ColID != 0 && ui.end.ColID != ui.mazeWidth-1:
+		case ui.end.Row != 0 && ui.end.Row != ui.mazeWidth-1 && ui.end.Col != 0 && ui.end.Col != ui.mazeWidth-1:
 			fmt.Fprintln(ui.out, "\033[31mError: end point must lie on the boundary.\033[0m\nType correct end point!")
 		default:
 			break EndPointLoop
@@ -238,16 +227,21 @@ func (ui *UI) Run() error {
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 
+	paint := painter.New(ui.out)
+
 	go func() {
 		defer wg.Done()
-		ui.painter.PaintGeneration(context.Background(), ui.mazeHeight, ui.mazeWidth, ch)
+		paint.PaintGeneration(context.Background(), ui.mazeHeight, ui.mazeWidth, ch)
 	}()
 
-	maze, err := ui.gen.GenerateMaze(
+	gen := generator.New()
+
+	maze, err := gen.GenerateMaze(
 		ui.mazeHeight,
 		ui.mazeWidth,
 		ui.start,
 		ui.end,
+		generator.NewBacktrack(),
 		ch,
 	)
 	if err != nil {
@@ -257,14 +251,16 @@ func (ui *UI) Run() error {
 	close(ch)
 	wg.Wait()
 
-	if path, ok := ui.pathFinder.FindPath(maze, ui.start, ui.end); ok {
-		ui.painter.PaintPath(path, 20*time.Millisecond)
+	pathFinder := pathfinder.New()
+
+	if path, ok := pathFinder.FindPath(maze, ui.start, ui.end); ok {
+		paint.PaintPath(path, 20*time.Millisecond)
 	} else {
-		ui.painter.MoveCursor(ui.mazeHeight+1, 0)
+		paint.MoveCursor(ui.mazeHeight+1, 0)
 		fmt.Println("No path in this maze")
 	}
 
-	ui.painter.MoveCursor(ui.mazeHeight+2, 0)
+	paint.MoveCursor(ui.mazeHeight+2, 0)
 
 	return nil
 }

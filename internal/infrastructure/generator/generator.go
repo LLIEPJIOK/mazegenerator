@@ -1,13 +1,21 @@
 package generator
 
 import (
-	"crypto/rand"
 	"fmt"
-	"math/big"
+	"time"
 
 	"github.com/es-debug/backend-academy-2024-go-template/internal/domain"
 	"golang.org/x/sync/errgroup"
 )
+
+type Algorithm interface {
+	createMazeFromCoord(
+		height, width int,
+		start domain.Coord,
+		drawingChan chan<- domain.CellRenderData,
+		processID int,
+	) (domain.Maze, error)
+}
 
 type Generator struct {
 	dirRow []int
@@ -21,119 +29,56 @@ func New() *Generator {
 	}
 }
 
-func (g *Generator) createMazeFromCoord(
-	height, width int,
-	start domain.Coord,
-	drawingChan chan<- domain.CellRenderData,
-	processID int,
-) ([][]domain.CellType, error) {
-	maze := make([][]domain.CellType, height)
-
-	for i := range height {
-		maze[i] = make([]domain.CellType, width)
-	}
-
-	waitList := make([]domain.Coord, 0)
-
-	for i := range len(g.dirRow) {
-		newRowID, newColID := start.RowID+g.dirRow[i], start.ColID+g.dirCol[i]
-		if min(newRowID, newColID) < 0 || newRowID >= height || newColID >= width {
-			continue
-		}
-
-		waitList = append(waitList, domain.NewCoord(newRowID, newColID))
-	}
-
-	maze[start.RowID][start.ColID] = domain.Passage
-	drawingChan <- domain.NewCellRenderData(start.RowID, start.ColID, domain.Passage, processID, 3000)
-
-	for len(waitList) != 0 {
-		randID, err := rand.Int(rand.Reader, big.NewInt(int64(len(waitList))))
-		if err != nil {
-			return nil, fmt.Errorf("generate random processID: %w", err)
-		}
-
-		randCoord := waitList[randID.Int64()]
-		waitList[randID.Int64()], waitList[len(waitList)-1] = waitList[len(waitList)-1], waitList[randID.Int64()]
-		waitList = waitList[:len(waitList)-1]
-
-		cntWalls, cntBorders := 0, 0
-
-		for i := range g.dirRow {
-			newRowID, newColID := randCoord.RowID+g.dirRow[i], randCoord.ColID+g.dirCol[i]
-			if min(newRowID, newColID) < 0 || newRowID >= height || newColID >= width {
-				cntBorders++
-				continue
-			}
-
-			if maze[newRowID][newColID] == domain.Wall {
-				waitList = append(waitList, domain.NewCoord(newRowID, newColID))
-				cntWalls++
-			}
-		}
-
-		if cntWalls+cntBorders < 3 {
-			waitList = waitList[:len(waitList)-cntWalls]
-		} else {
-			maze[randCoord.RowID][randCoord.ColID] = domain.Passage
-			drawingChan <- domain.NewCellRenderData(randCoord.RowID, randCoord.ColID, domain.Passage, processID, 3000)
-		}
-	}
-
-	return maze, nil
-}
-
 func (g *Generator) clearDeadEnd(
-	maze [][]domain.CellType,
+	maze domain.Maze,
 	start domain.Coord,
 	drawingChan chan<- domain.CellRenderData,
 	processID int,
-) [][]domain.CellType {
-	height := len(maze)
-	newMaze := make([][]domain.CellType, height)
+) domain.Maze {
+	newCells := make([][]domain.CellType, maze.Height)
 
-	for i := range height {
-		width := len(maze[i])
-		newMaze[i] = make([]domain.CellType, width)
+	for i := range maze.Height {
+		newCells[i] = make([]domain.CellType, maze.Width)
 
-		for j := range width {
+		for j := range maze.Width {
 			cntPassages := 0
 
 			for k := range g.dirRow {
 				newRowID, newColID := i+g.dirRow[k], j+g.dirCol[k]
-				if min(newRowID, newColID) < 0 || newRowID >= height || newColID >= width {
+				if min(newRowID, newColID) < 0 || newRowID >= maze.Height || newColID >= maze.Width {
 					continue
 				}
 
-				if maze[newRowID][newColID] == domain.Passage {
+				if maze.Cells[newRowID][newColID] == domain.Passage {
 					cntPassages++
 				}
 			}
 
-			if cntPassages == 1 && (i != start.RowID || j != start.ColID) {
-				newMaze[i][j] = domain.Wall
-				drawingChan <- domain.NewCellRenderData(i, j, domain.Wall, processID, 100)
+			if cntPassages == 1 && (i != start.Row || j != start.Col) {
+				newCells[i][j] = domain.Wall
+				drawingChan <- domain.NewCellRenderData(i, j, domain.Wall, processID, 100*time.Microsecond)
 			} else {
-				newMaze[i][j] = maze[i][j]
+				newCells[i][j] = maze.Cells[i][j]
 			}
 		}
 	}
 
-	return newMaze
+	return domain.NewMaze(maze.Height, maze.Width, newCells)
 }
 
 const clearDeadEndNumber = 10
 
-func (g *Generator) generateMazeFromPoint(
+func (g *Generator) generateMazeFromCoord(
 	height, width int,
 	start domain.Coord,
+	algorithm Algorithm,
 	drawingChan chan<- domain.CellRenderData,
 	processID int,
-) ([][]domain.CellType, error) {
-	maze, err := g.createMazeFromCoord(height, width, start, drawingChan, processID)
+) (domain.Maze, error) {
+	maze, err := algorithm.createMazeFromCoord(height, width, start, drawingChan, processID)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"g.createMazeFromCoord(%d, %d, %#v): %w",
+		return domain.Maze{}, fmt.Errorf(
+			"algorithm.createMazeFromCoord(%d, %d, %#v): %w",
 			height,
 			width,
 			start,
@@ -149,43 +94,42 @@ func (g *Generator) generateMazeFromPoint(
 	return maze, nil
 }
 
-func mergeMazes(first, second [][]domain.CellType, drawingChan chan<- domain.CellRenderData,
+func mergeMazes(first, second domain.Maze, drawingChan chan<- domain.CellRenderData,
 	processID int,
-) [][]domain.CellType {
-	height := len(first)
-	mergedMaze := make([][]domain.CellType, height)
+) domain.Maze {
+	mergedCells := make([][]domain.CellType, first.Height)
 
-	for i := range height {
-		width := len(first[i])
-		mergedMaze[i] = make([]domain.CellType, width)
+	for i := range first.Height {
+		mergedCells[i] = make([]domain.CellType, first.Width)
 
-		for j := range width {
-			if first[i][j] == domain.Wall {
-				mergedMaze[i][j] = second[i][j]
+		for j := range first.Width {
+			if first.Cells[i][j] == domain.Wall {
+				mergedCells[i][j] = second.Cells[i][j]
 			} else {
-				mergedMaze[i][j] = first[i][j]
+				mergedCells[i][j] = first.Cells[i][j]
 			}
 
-			drawingChan <- domain.NewCellRenderData(i, j, mergedMaze[i][j], processID, 50)
+			drawingChan <- domain.NewCellRenderData(i, j, mergedCells[i][j], processID, 50*time.Microsecond)
 		}
 	}
 
-	return mergedMaze
+	return domain.NewMaze(first.Height, first.Width, mergedCells)
 }
 
 func (g *Generator) GenerateMaze(
 	height, width int,
 	start, end domain.Coord,
+	algorithm Algorithm,
 	drawingChan chan<- domain.CellRenderData,
 ) (domain.Maze, error) {
 	eg := &errgroup.Group{}
 
-	var startMaze, endMaze [][]domain.CellType
+	var startMaze, endMaze domain.Maze
 
 	eg.Go(func() error {
 		var err error
 
-		startMaze, err = g.generateMazeFromPoint(height, width, start, drawingChan, 1)
+		startMaze, err = g.generateMazeFromCoord(height, width, start, algorithm, drawingChan, 1)
 		if err != nil {
 			return fmt.Errorf("g.generateMazeFromPoint(%d, %d, %#v): %w", height, width, start, err)
 		}
@@ -196,7 +140,7 @@ func (g *Generator) GenerateMaze(
 	eg.Go(func() error {
 		var err error
 
-		endMaze, err = g.generateMazeFromPoint(height, width, end, drawingChan, 2)
+		endMaze, err = g.generateMazeFromCoord(height, width, end, algorithm, drawingChan, 2)
 		if err != nil {
 			return fmt.Errorf("g.generateMazeFromPoint(%d, %d, %#v): %w", height, width, end, err)
 		}
@@ -210,5 +154,5 @@ func (g *Generator) GenerateMaze(
 
 	maze := mergeMazes(startMaze, endMaze, drawingChan, 0)
 
-	return domain.NewMaze(height, width, maze), nil
+	return maze, nil
 }
