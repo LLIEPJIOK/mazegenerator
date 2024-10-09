@@ -9,12 +9,12 @@ import (
 )
 
 type Backtrack struct {
-	direction
+	dir domain.Direction
 }
 
 func NewBacktrack() *Backtrack {
 	return &Backtrack{
-		direction: defaultDirection(),
+		dir: domain.DefaultDirection(),
 	}
 }
 
@@ -41,8 +41,8 @@ func (b *Backtrack) createMazeCellsFromCoord(
 
 		cntWalls := 0
 
-		for i := range b.dirRow {
-			newRow, newCol := curCoord.Row+b.dirRow[i], curCoord.Col+b.dirCol[i]
+		for i := range b.dir.Rows {
+			newRow, newCol := curCoord.Row+b.dir.Rows[i], curCoord.Col+b.dir.Cols[i]
 			if min(newRow, newCol) < 0 || newRow >= height || newCol >= width ||
 				cells[newRow][newCol] == domain.Wall {
 				cntWalls++
@@ -60,7 +60,7 @@ func (b *Backtrack) createMazeCellsFromCoord(
 		prevRands := make(map[int64]struct{})
 
 		for len(prevRands) != forkCoeff {
-			randID, err := rand.Int(rand.Reader, big.NewInt(int64(len(b.dirRow))))
+			randID, err := rand.Int(rand.Reader, big.NewInt(int64(len(b.dir.Rows))))
 			if err != nil {
 				return nil, fmt.Errorf("generate random processID: %w", err)
 			}
@@ -69,7 +69,7 @@ func (b *Backtrack) createMazeCellsFromCoord(
 				continue
 			}
 
-			newRow, newCol := curCoord.Row+b.dirRow[randID.Int64()], curCoord.Col+b.dirCol[randID.Int64()]
+			newRow, newCol := curCoord.Row+b.dir.Rows[randID.Int64()], curCoord.Col+b.dir.Cols[randID.Int64()]
 
 			if newRow >= 0 && newRow < height && newCol >= 0 && newCol < width && cells[newRow][newCol] == domain.Wall {
 				stack = append(stack, domain.NewCoord(newRow, newCol))

@@ -40,16 +40,14 @@ type Algorithm interface {
 }
 
 type Generator struct {
-	algo   Algorithm
-	dirRow []int
-	dirCol []int
+	algo Algorithm
+	dir  domain.Direction
 }
 
 func New(algo Algorithm) *Generator {
 	return &Generator{
-		algo:   algo,
-		dirRow: []int{-1, 1, 0, 0},
-		dirCol: []int{0, 0, -1, 1},
+		algo: algo,
+		dir:  domain.DefaultDirection(),
 	}
 }
 
@@ -67,8 +65,8 @@ func (g *Generator) clearDeadEnd(
 		for j := range width {
 			cntPassages := 0
 
-			for k := range g.dirRow {
-				newRowID, newColID := i+g.dirRow[k], j+g.dirCol[k]
+			for k := range g.dir.Rows {
+				newRowID, newColID := i+g.dir.Rows[k], j+g.dir.Cols[k]
 				if min(newRowID, newColID) < 0 || newRowID >= height || newColID >= width {
 					continue
 				}

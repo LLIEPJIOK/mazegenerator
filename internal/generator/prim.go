@@ -9,12 +9,12 @@ import (
 )
 
 type Prim struct {
-	direction
+	dir domain.Direction
 }
 
 func NewPrim() *Prim {
 	return &Prim{
-		direction: defaultDirection(),
+		dir: domain.DefaultDirection(),
 	}
 }
 
@@ -31,8 +31,8 @@ func (p *Prim) createMazeCellsFromCoord(
 
 	waitList := make([]domain.Coord, 0)
 
-	for i := range len(p.dirRow) {
-		newRowID, newColID := start.Row+p.dirRow[i], start.Col+p.dirCol[i]
+	for i := range len(p.dir.Rows) {
+		newRowID, newColID := start.Row+p.dir.Rows[i], start.Col+p.dir.Cols[i]
 		if min(newRowID, newColID) < 0 || newRowID >= height || newColID >= width {
 			continue
 		}
@@ -55,8 +55,8 @@ func (p *Prim) createMazeCellsFromCoord(
 
 		cntWalls, cntBorders := 0, 0
 
-		for i := range p.dirRow {
-			newRowID, newColID := randCoord.Row+p.dirRow[i], randCoord.Col+p.dirCol[i]
+		for i := range p.dir.Rows {
+			newRowID, newColID := randCoord.Row+p.dir.Rows[i], randCoord.Col+p.dir.Cols[i]
 			if min(newRowID, newColID) < 0 || newRowID >= height || newColID >= width {
 				cntBorders++
 				continue

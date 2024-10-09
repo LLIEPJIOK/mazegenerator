@@ -9,6 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type PathFinder interface {
+	ShortestPath(maze domain.Maze) ([]domain.Coord, bool)
+}
+
 func squareDist(first, second domain.Coord) int {
 	dRow, dCol := first.Row-second.Row, first.Col-second.Col
 
@@ -21,6 +25,7 @@ func TestFindPathIfPathExists(t *testing.T) {
 	testCases := []struct {
 		data         domain.MazeData
 		cells        [][]domain.CellType
+		pathFinder   PathFinder
 		shortestDist int
 	}{
 		{
@@ -32,6 +37,7 @@ func TestFindPathIfPathExists(t *testing.T) {
 				{0, 0, 0, 0, 1},
 				{0, 0, 0, 0, 1},
 			},
+			pathFinder:   pathfinder.NewAStar(),
 			shortestDist: 8,
 		},
 		{
@@ -43,6 +49,7 @@ func TestFindPathIfPathExists(t *testing.T) {
 				{0, 0, 0, 0, 1},
 				{0, 0, 0, 0, 1},
 			},
+			pathFinder:   pathfinder.NewDijkstra(),
 			shortestDist: 4,
 		},
 		{
@@ -55,6 +62,7 @@ func TestFindPathIfPathExists(t *testing.T) {
 				{0, 1, 1, 1, 0, 1},
 				{1, 1, 1, 1, 1, 1},
 			},
+			pathFinder:   pathfinder.NewAStar(),
 			shortestDist: 15,
 		},
 		{
@@ -68,6 +76,7 @@ func TestFindPathIfPathExists(t *testing.T) {
 				{1, 0, 0, 0, 0, 0, 1},
 				{1, 1, 1, 1, 1, 1, 1},
 			},
+			pathFinder:   pathfinder.NewDijkstra(),
 			shortestDist: 14,
 		},
 		{
@@ -78,6 +87,7 @@ func TestFindPathIfPathExists(t *testing.T) {
 				{0, 1, 0, 0},
 				{1, 1, 1, 1},
 			},
+			pathFinder:   pathfinder.NewAStar(),
 			shortestDist: 5,
 		},
 		{
@@ -89,6 +99,7 @@ func TestFindPathIfPathExists(t *testing.T) {
 				{1, 0, 0, 0, 1},
 				{1, 1, 1, 1, 1},
 			},
+			pathFinder:   pathfinder.NewDijkstra(),
 			shortestDist: 4,
 		},
 		{
@@ -101,18 +112,17 @@ func TestFindPathIfPathExists(t *testing.T) {
 				{0, 1, 0, 0, 0, 1},
 				{1, 1, 1, 1, 1, 1},
 			},
+			pathFinder:   pathfinder.NewAStar(),
 			shortestDist: 11,
 		},
 	}
-
-	pathFinder := pathfinder.New()
 
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("#%d", i+1), func(t *testing.T) {
 			t.Parallel()
 
 			maze := domain.NewMaze(testCase.data, testCase.cells)
-			path, ok := pathFinder.FindPath(maze)
+			path, ok := testCase.pathFinder.ShortestPath(maze)
 
 			require.True(t, ok, "path must exist")
 			require.NotEqual(t, 0, len(path), "path mustn't be empty")
@@ -149,8 +159,9 @@ func TestFindPathIfPathExists(t *testing.T) {
 
 func TestFindPathIfPathNotExists(t *testing.T) {
 	testCases := []struct {
-		data  domain.MazeData
-		cells [][]domain.CellType
+		data       domain.MazeData
+		cells      [][]domain.CellType
+		pathFinder PathFinder
 	}{
 		{
 			data: domain.NewMazeData(5, 5, domain.NewCoord(0, 0), domain.NewCoord(4, 4)),
@@ -161,6 +172,7 @@ func TestFindPathIfPathNotExists(t *testing.T) {
 				{0, 0, 0, 0, 1},
 				{0, 0, 0, 0, 1},
 			},
+			pathFinder: pathfinder.NewDijkstra(),
 		},
 		{
 			data: domain.NewMazeData(7, 7, domain.NewCoord(0, 3), domain.NewCoord(6, 3)),
@@ -173,6 +185,7 @@ func TestFindPathIfPathNotExists(t *testing.T) {
 				{0, 0, 0, 0, 0, 0, 1},
 				{1, 1, 1, 1, 1, 1, 1},
 			},
+			pathFinder: pathfinder.NewAStar(),
 		},
 		{
 			data: domain.NewMazeData(4, 4, domain.NewCoord(0, 0), domain.NewCoord(3, 0)),
@@ -182,15 +195,14 @@ func TestFindPathIfPathNotExists(t *testing.T) {
 				{0, 1, 0, 0},
 				{1, 0, 1, 1},
 			},
+			pathFinder: pathfinder.NewDijkstra(),
 		},
 	}
-
-	pathFinder := pathfinder.New()
 
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("#%d", i+1), func(t *testing.T) {
 			maze := domain.NewMaze(testCase.data, testCase.cells)
-			_, ok := pathFinder.FindPath(maze)
+			_, ok := testCase.pathFinder.ShortestPath(maze)
 
 			require.False(t, ok, "path mustn't exist")
 		})

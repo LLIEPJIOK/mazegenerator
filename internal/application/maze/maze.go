@@ -27,7 +27,7 @@ func Start() error {
 
 	gen := generator.New(generator.NewPrim())
 	paint := painter.New(output, data.Height, data.Width)
-	pathFinder := pathfinder.New()
+	pathFinder := pathfinder.NewDijkstra()
 	paintingChan := make(chan domain.PaintingData)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -50,7 +50,7 @@ func Start() error {
 	close(paintingChan)
 	wg.Wait()
 
-	if path, ok := pathFinder.FindPath(maze); ok {
+	if path, ok := pathFinder.ShortestPath(maze); ok {
 		paint.PaintPath(path, pathDrawingDelay)
 	} else {
 		// ANSI code for red letters
