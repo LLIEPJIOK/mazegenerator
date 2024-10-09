@@ -30,7 +30,7 @@ func (c CellType) String() string {
 	return ""
 }
 
-type CellRenderData struct {
+type PaintingData struct {
 	Row      int
 	Col      int
 	Tpe      CellType
@@ -38,8 +38,8 @@ type CellRenderData struct {
 	Delay    time.Duration
 }
 
-func NewCellRenderData(row, col int, tpe CellType, senderID int, delay time.Duration) CellRenderData {
-	return CellRenderData{
+func NewPaintingData(row, col int, tpe CellType, senderID int, delay time.Duration) PaintingData {
+	return PaintingData{
 		Row:      row,
 		Col:      col,
 		Tpe:      tpe,

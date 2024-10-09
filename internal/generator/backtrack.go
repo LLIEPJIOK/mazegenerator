@@ -4,20 +4,17 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
-	"time"
 
 	"github.com/es-debug/backend-academy-2024-go-template/internal/domain"
 )
 
 type Backtrack struct {
-	dirRow []int
-	dirCol []int
+	direction
 }
 
 func NewBacktrack() *Backtrack {
 	return &Backtrack{
-		dirRow: []int{-1, 1, 0, 0},
-		dirCol: []int{0, 0, -1, 1},
+		direction: defaultDirection(),
 	}
 }
 
@@ -25,12 +22,11 @@ const (
 	forkCoeff = 3
 )
 
-func (b *Backtrack) createMazeFromCoord(
+func (b *Backtrack) createMazeCellsFromCoord(
 	height, width int,
 	start domain.Coord,
-	drawingChan chan<- domain.CellRenderData,
-	processID int,
-) (domain.Maze, error) {
+	drawingChan chan<- cell,
+) ([][]domain.CellType, error) {
 	cells := make([][]domain.CellType, height)
 
 	for i := range height {
@@ -59,14 +55,14 @@ func (b *Backtrack) createMazeFromCoord(
 		}
 
 		cells[curCoord.Row][curCoord.Col] = domain.Passage
-		drawingChan <- domain.NewCellRenderData(curCoord.Row, curCoord.Col, domain.Passage, processID, 3*time.Millisecond)
+		drawingChan <- newCell(curCoord.Row, curCoord.Col, domain.Passage, drawingDelay)
 
 		prevRands := make(map[int64]struct{})
 
 		for len(prevRands) != forkCoeff {
 			randID, err := rand.Int(rand.Reader, big.NewInt(int64(len(b.dirRow))))
 			if err != nil {
-				return domain.Maze{}, fmt.Errorf("generate random processID: %w", err)
+				return nil, fmt.Errorf("generate random processID: %w", err)
 			}
 
 			if _, ok := prevRands[randID.Int64()]; ok {
@@ -83,5 +79,5 @@ func (b *Backtrack) createMazeFromCoord(
 		}
 	}
 
-	return domain.NewMaze(height, width, cells), nil
+	return cells, nil
 }

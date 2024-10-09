@@ -4,29 +4,25 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
-	"time"
 
 	"github.com/es-debug/backend-academy-2024-go-template/internal/domain"
 )
 
 type Prim struct {
-	dirRow []int
-	dirCol []int
+	direction
 }
 
 func NewPrim() *Prim {
 	return &Prim{
-		dirRow: []int{-1, 1, 0, 0},
-		dirCol: []int{0, 0, -1, 1},
+		direction: defaultDirection(),
 	}
 }
 
-func (p *Prim) createMazeFromCoord(
+func (p *Prim) createMazeCellsFromCoord(
 	height, width int,
 	start domain.Coord,
-	drawingChan chan<- domain.CellRenderData,
-	processID int,
-) (domain.Maze, error) {
+	drawingChan chan<- cell,
+) ([][]domain.CellType, error) {
 	cells := make([][]domain.CellType, height)
 
 	for i := range height {
@@ -45,12 +41,12 @@ func (p *Prim) createMazeFromCoord(
 	}
 
 	cells[start.Row][start.Col] = domain.Passage
-	drawingChan <- domain.NewCellRenderData(start.Row, start.Col, domain.Passage, processID, 3*time.Millisecond)
+	drawingChan <- newCell(start.Row, start.Col, domain.Passage, drawingDelay)
 
 	for len(waitList) != 0 {
 		randID, err := rand.Int(rand.Reader, big.NewInt(int64(len(waitList))))
 		if err != nil {
-			return domain.Maze{}, fmt.Errorf("generate random processID: %w", err)
+			return nil, fmt.Errorf("generate random processID: %w", err)
 		}
 
 		randCoord := waitList[randID.Int64()]
@@ -76,9 +72,9 @@ func (p *Prim) createMazeFromCoord(
 			waitList = waitList[:len(waitList)-cntWalls]
 		} else {
 			cells[randCoord.Row][randCoord.Col] = domain.Passage
-			drawingChan <- domain.NewCellRenderData(randCoord.Row, randCoord.Col, domain.Passage, processID, 3*time.Millisecond)
+			drawingChan <- newCell(randCoord.Row, randCoord.Col, domain.Passage, drawingDelay)
 		}
 	}
 
-	return domain.NewMaze(height, width, cells), nil
+	return cells, nil
 }

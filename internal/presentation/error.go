@@ -1,6 +1,12 @@
-package domain
+package presentation
 
 import "fmt"
+
+type ErrNoInputLines struct{}
+
+func (e ErrNoInputLines) Error() string {
+	return "no more input lines"
+}
 
 type ErrInvalidRange struct {
 	mn int

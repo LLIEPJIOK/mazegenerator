@@ -21,25 +21,25 @@ func newQueueItem(curCoord, prevCoord domain.Coord, dist int) queueItem {
 	}
 }
 
-type PriorityQueue []queueItem
+type priorityQueue []queueItem
 
-func (pq PriorityQueue) Len() int {
+func (pq priorityQueue) Len() int {
 	return len(pq)
 }
 
-func (pq PriorityQueue) Less(i, j int) bool {
+func (pq priorityQueue) Less(i, j int) bool {
 	return pq[i].dist < pq[j].dist
 }
 
-func (pq PriorityQueue) Swap(i, j int) {
+func (pq priorityQueue) Swap(i, j int) {
 	pq[i], pq[j] = pq[j], pq[i]
 }
 
-func (pq *PriorityQueue) Push(x interface{}) {
+func (pq *priorityQueue) Push(x interface{}) {
 	*pq = append(*pq, x.(queueItem))
 }
 
-func (pq *PriorityQueue) Pop() interface{} {
+func (pq *priorityQueue) Pop() interface{} {
 	old := *pq
 	n := len(old)
 	item := old[n-1]
@@ -78,10 +78,10 @@ func getPath(
 	return path
 }
 
-func (p *PathFinder) FindPath(maze domain.Maze, start, end domain.Coord) ([]domain.Coord, bool) {
-	pq := make(PriorityQueue, 0)
+func (p *PathFinder) FindPath(maze domain.Maze) ([]domain.Coord, bool) {
+	pq := make(priorityQueue, 0)
 	heap.Init(&pq)
-	heap.Push(&pq, newQueueItem(start, domain.Coord{}, 0))
+	heap.Push(&pq, newQueueItem(maze.Data.Start, domain.Coord{}, 0))
 
 	prevCoords := make(map[domain.Coord]domain.Coord)
 
@@ -94,8 +94,8 @@ func (p *PathFinder) FindPath(maze domain.Maze, start, end domain.Coord) ([]doma
 
 		prevCoords[curItem.curCoord] = curItem.prevCoord
 
-		if curItem.curCoord == end {
-			path := getPath(prevCoords, end, start)
+		if curItem.curCoord == maze.Data.End {
+			path := getPath(prevCoords, maze.Data.End, maze.Data.Start)
 
 			return path, true
 		}
@@ -104,7 +104,7 @@ func (p *PathFinder) FindPath(maze domain.Maze, start, end domain.Coord) ([]doma
 			dRow, dCol := p.dirRow[i], p.dirCol[i]
 			newRow, newCol := curItem.curCoord.Row+dRow, curItem.curCoord.Col+dCol
 
-			if min(newCol, newRow) >= 0 && newRow < maze.Height && newCol < maze.Width &&
+			if min(newCol, newRow) >= 0 && newRow < maze.Data.Height && newCol < maze.Data.Width &&
 				maze.Cells[newRow][newCol] != domain.Wall {
 				heap.Push(
 					&pq,
