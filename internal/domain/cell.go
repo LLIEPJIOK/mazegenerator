@@ -10,7 +10,7 @@ const (
 	Money
 	Sand
 	River
-	Guessing
+	Ambiguous
 	Path
 )
 
@@ -22,7 +22,7 @@ func (c CellType) String() string {
 	case Passage:
 		// ANSI code for white background
 		return "\x1b[47m  \x1b[0m"
-	case Guessing:
+	case Ambiguous:
 		// ANSI code for gray background
 		return "\x1b[100m??\x1b[0m"
 	case Money:
@@ -43,7 +43,7 @@ func (c CellType) String() string {
 }
 
 func (c CellType) IsTraversable() bool {
-	return c != Wall && c != Guessing && c != Path
+	return c != Wall && c != Ambiguous && c != Path
 }
 
 func (c CellType) Cost() int {
@@ -60,7 +60,7 @@ func (c CellType) Cost() int {
 	case River:
 		return 10
 
-	case Wall, Guessing, Path:
+	case Wall, Ambiguous, Path:
 		return 0
 	}
 

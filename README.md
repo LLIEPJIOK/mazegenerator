@@ -1,16 +1,53 @@
-# Шаблон Go-проекта для домашних заданий
+## About Maze Generator
 
-Шаблон для домашних заданий [Академии Бэкенда 2024](https://edu.tinkoff.ru/all-activities/courses/870efa9d-7067-4713-97ae-7db256b73eab).
+It's a program for creating mazes and finding the shortest path between two points.
 
-Цель данного репозитория – познакомить вас с процессом разработки приложений на Go с использованием наиболее распространенных практик, инструментов и библиотек.
+## Getting Started
 
-## Структура проекта
+1. Open a terminal that supports ANSI and run the following command:
 
-Это шаблон проекта, основанный на лучших практиках структурирования Go кода приложения. Проект содержит в себе следующие компоненты:
+   ```shell
+   git clone git@github.com:central-university-dev/backend-academy-2024-fall.git
+   ```
 
-- `cmd` – директория, содержащая исполняемые файлы приложения. В данном шаблоне есть только один исполняемый файл `run`, который запускает приложение. Хорошей практикой является название пакета, содержащего `main.go` так же, как и название исполняемого файла. Таким образом в каждом домашнем задании вам будет необходимо изменять название пакета `run` на название, подходящее для вашего приложения.
-- `internal` – директория, содержащая внутренние пакеты приложения. Внутренние пакеты не могут быть импортированы другими пакетами вне проекта.
-  - `application` - пакет, в котором содержатся юзкейсы приложения.
-  - `domain` - пакет, в котором содержатся модели приложения.
-  - `infrastructure` - пакет, в котором содержатся инфраструктурные компоненты приложения(работа с выводом пользователю, работа с диском, работа с сетью и т.д.).
-- `pkg` – директория, содержащая пакеты, которые могут быть импортированы другими пакетами вне проекта. Общей рекомендацией является то, что пакеты, содержащиеся в `pkg` должны быть независимыми от остальных пакетов проекта.
+2. Navigate to the project folder:
+
+   ```shell
+   cd backend_academy_2024_project_2-go-LLIEPJIOK
+   ```
+
+3. Run the program:
+
+   ```bash
+   go run cmd/maze/main.go
+   ```
+
+4. Follow the instructions provided by the program. It's quite simple.
+
+## Algorithms
+
+### Maze Generation
+
+Two algorithms are implemented for maze generation:
+
+- Prim's Algorithm
+- Backtracking Algorithm
+
+### Pathfinding
+
+Two algorithms are implemented for pathfinding:
+
+- Dijkstra's Algorithm
+- A\* (A-star) with Manhattan distance as the heuristic
+
+## Cell Types
+
+The following cell types are used in the maze:
+
+- Wall
+- Passage (cost = 3)
+- Money (cost = 1)
+- Sand (cost = 5)
+- River (cost = 10)
+- Ambiguous
+- Path

@@ -31,7 +31,7 @@ func (dm *PaintingMaze) GetCellType(x, y int) domain.CellType {
 		}
 	}
 
-	return domain.Guessing
+	return domain.Ambiguous
 }
 
 func (dm *PaintingMaze) AddCellType(cellData domain.CellPaintingData) {

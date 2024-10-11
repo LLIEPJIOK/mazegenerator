@@ -73,7 +73,7 @@ func (p *Presentation) writeCellsInfo() {
 	fmt.Fprintf(p.out, " %s - Sand.\tCost = %d\n", domain.Sand, domain.Sand.Cost())
 	fmt.Fprintf(p.out, " %s - River.\tCost = %d\n", domain.River, domain.River.Cost())
 	fmt.Fprintf(p.out, " %s - Path.\n", domain.Path)
-	fmt.Fprintf(p.out, " %s - Ambiguous. Its type will be defined further\n\n", domain.Guessing)
+	fmt.Fprintf(p.out, " %s - Ambiguous. Its type will be defined further\n\n", domain.Ambiguous)
 }
 
 func (p *Presentation) getInt(scan *bufio.Scanner, rng rangeNumber) (int, error) {
