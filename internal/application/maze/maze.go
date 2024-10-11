@@ -67,7 +67,7 @@ func Start() error {
 	mazeData := inputToMazeData(inputData)
 
 	gen := generator.New(generationAlgorithm(inputData.GenAlgo))
-	paint := painter.New(output, mazeData.Height, mazeData.Width)
+	paint := painter.New(output, mazeData)
 	pathFinder := pathFinderAlgorithm(inputData.PathFindAlgo)
 	paintingChan := make(chan domain.CellPaintingData)
 
@@ -106,8 +106,7 @@ func Start() error {
 	wg.Wait()
 
 	if !ok {
-		// ANSI code for red letters
-		fmt.Println("\033[31mThere is no way between start and end points\033[0m")
+		fmt.Println("There is no way between start and end points")
 	}
 
 	return nil
