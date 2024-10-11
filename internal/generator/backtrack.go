@@ -54,8 +54,13 @@ func (b *Backtrack) createMazeCellsFromCoord(
 			continue
 		}
 
-		cells[curCoord.Row][curCoord.Col] = domain.Passage
-		drawingChan <- newCell(curCoord.Row, curCoord.Col, domain.Passage, drawingDelay)
+		tpe, err := randomCellType()
+		if err != nil {
+			return nil, fmt.Errorf("getting random cell type: %w", err)
+		}
+
+		cells[curCoord.Row][curCoord.Col] = tpe
+		drawingChan <- newCell(curCoord.Row, curCoord.Col, tpe, drawingDelay)
 
 		prevRands := make(map[int64]struct{})
 

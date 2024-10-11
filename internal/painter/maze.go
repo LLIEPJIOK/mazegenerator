@@ -34,7 +34,7 @@ func (dm *PaintingMaze) GetCellType(x, y int) domain.CellType {
 	return domain.Guessing
 }
 
-func (dm *PaintingMaze) AddCellType(cellData domain.PaintingData) {
+func (dm *PaintingMaze) AddCellType(cellData domain.CellPaintingData) {
 	if cellData.Tpe == domain.Wall {
 		delete(dm.cells[cellData.Row][cellData.Col], cellData.SenderID)
 	} else {

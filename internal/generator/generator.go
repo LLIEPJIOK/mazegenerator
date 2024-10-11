@@ -116,7 +116,7 @@ func (g *Generator) generateMazeCellsFromCoord(
 	return cells, nil
 }
 
-func mergeMazes(first, second domain.Maze, drawingChan chan<- domain.PaintingData,
+func mergeMazes(first, second domain.Maze, drawingChan chan<- domain.CellPaintingData,
 	processID int,
 ) (domain.Maze, error) {
 	height, width := first.Data.Height, first.Data.Width
@@ -144,18 +144,18 @@ func mergeMazes(first, second domain.Maze, drawingChan chan<- domain.PaintingDat
 				}
 			}
 
-			drawingChan <- domain.NewPaintingData(i, j, mergedCells[i][j], processID, mergeDelay)
+			drawingChan <- domain.NewCellPaintingData(i, j, mergedCells[i][j], processID, mergeDelay)
 		}
 	}
 
 	return domain.NewMaze(first.Data, mergedCells), nil
 }
 
-func cellToPaintingData(c cell, id int) domain.PaintingData {
-	return domain.NewPaintingData(c.Row, c.Col, c.Tpe, id, c.Delay)
+func cellToPaintingData(c cell, id int) domain.CellPaintingData {
+	return domain.NewCellPaintingData(c.Row, c.Col, c.Tpe, id, c.Delay)
 }
 
-func mergeChannels(out chan<- domain.PaintingData, in ...chan cell) {
+func mergeChannels(out chan<- domain.CellPaintingData, in ...chan cell) {
 	wg := &sync.WaitGroup{}
 
 	for i, ch := range in {
@@ -175,7 +175,7 @@ func mergeChannels(out chan<- domain.PaintingData, in ...chan cell) {
 
 func (g *Generator) GenerateMaze(
 	data domain.MazeData,
-	paintingChan chan<- domain.PaintingData,
+	paintingChan chan<- domain.CellPaintingData,
 ) (domain.Maze, error) {
 	eg := &errgroup.Group{}
 

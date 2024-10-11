@@ -34,7 +34,7 @@ func NewDijkstra() *Dijkstra {
 	}
 }
 
-func (d *Dijkstra) ShortestPath(maze domain.Maze) ([]domain.Coord, bool) {
+func (d *Dijkstra) ShortestPath(maze domain.Maze, pathChan chan<- []domain.Coord) ([]domain.Coord, bool) {
 	pq := make(priorityQueue, 0)
 	heap.Init(&pq)
 	heap.Push(&pq, newDijkstraItem(maze.Data.Start, domain.Coord{}, 0))
@@ -49,6 +49,9 @@ func (d *Dijkstra) ShortestPath(maze domain.Maze) ([]domain.Coord, bool) {
 		}
 
 		prevCoords[curItem.curCoord] = curItem.prevCoord
+
+		curPath := getPath(prevCoords, curItem.curCoord, maze.Data.Start)
+		pathChan <- curPath
 
 		if curItem.curCoord == maze.Data.End {
 			path := getPath(prevCoords, maze.Data.End, maze.Data.Start)

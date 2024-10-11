@@ -18,7 +18,7 @@ import (
 const pathDrawingDelay = 50 * time.Millisecond
 
 type pathFinder interface {
-	ShortestPath(maze domain.Maze) ([]domain.Coord, bool)
+	ShortestPath(maze domain.Maze, pathChan chan<- []domain.Coord) ([]domain.Coord, bool)
 }
 
 func inputToMazeData(in *presentation.Input) domain.MazeData {
@@ -69,7 +69,7 @@ func Start() error {
 	gen := generator.New(generationAlgorithm(inputData.GenAlgo))
 	paint := painter.New(output, mazeData.Height, mazeData.Width)
 	pathFinder := pathFinderAlgorithm(inputData.PathFindAlgo)
-	paintingChan := make(chan domain.PaintingData)
+	paintingChan := make(chan domain.CellPaintingData)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -91,9 +91,21 @@ func Start() error {
 	close(paintingChan)
 	wg.Wait()
 
-	if path, ok := pathFinder.ShortestPath(maze); ok {
-		paint.PaintPath(path, pathDrawingDelay)
-	} else {
+	pathChan := make(chan []domain.Coord)
+
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		paint.PaintPath(pathChan, pathDrawingDelay)
+	}()
+
+	_, ok := pathFinder.ShortestPath(maze, pathChan)
+
+	close(pathChan)
+	wg.Wait()
+
+	if !ok {
 		// ANSI code for red letters
 		fmt.Println("\033[31mThere is no way between start and end points\033[0m")
 	}

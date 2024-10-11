@@ -10,13 +10,25 @@ import (
 )
 
 type PathFinder interface {
-	ShortestPath(maze domain.Maze) ([]domain.Coord, bool)
+	ShortestPath(maze domain.Maze, pathChan chan<- []domain.Coord) ([]domain.Coord, bool)
 }
 
 func squareDist(first, second domain.Coord) int {
 	dRow, dCol := first.Row-second.Row, first.Col-second.Col
 
 	return dRow*dRow + dCol*dCol
+}
+
+func discardChan() chan []domain.Coord {
+	ch := make(chan []domain.Coord)
+
+	go func() {
+		for {
+			<-ch
+		}
+	}()
+
+	return ch
 }
 
 func TestFindPathIfPathExists(t *testing.T) {
@@ -122,7 +134,7 @@ func TestFindPathIfPathExists(t *testing.T) {
 			t.Parallel()
 
 			maze := domain.NewMaze(testCase.data, testCase.cells)
-			path, ok := testCase.pathFinder.ShortestPath(maze)
+			path, ok := testCase.pathFinder.ShortestPath(maze, discardChan())
 
 			require.True(t, ok, "path must exist")
 			require.NotEqual(t, 0, len(path), "path mustn't be empty")
@@ -199,7 +211,7 @@ func TestFindPathIfPathNotExists(t *testing.T) {
 	for i, testCase := range testCases {
 		t.Run(fmt.Sprintf("#%d", i+1), func(t *testing.T) {
 			maze := domain.NewMaze(testCase.data, testCase.cells)
-			_, ok := testCase.pathFinder.ShortestPath(maze)
+			_, ok := testCase.pathFinder.ShortestPath(maze, discardChan())
 
 			require.False(t, ok, "path mustn't exist")
 		})

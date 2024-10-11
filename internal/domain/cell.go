@@ -67,7 +67,7 @@ func (c CellType) Cost() int {
 	return 0
 }
 
-type PaintingData struct {
+type CellPaintingData struct {
 	Row      int
 	Col      int
 	Tpe      CellType
@@ -75,8 +75,8 @@ type PaintingData struct {
 	Delay    time.Duration
 }
 
-func NewPaintingData(row, col int, tpe CellType, senderID int, delay time.Duration) PaintingData {
-	return PaintingData{
+func NewCellPaintingData(row, col int, tpe CellType, senderID int, delay time.Duration) CellPaintingData {
+	return CellPaintingData{
 		Row:      row,
 		Col:      col,
 		Tpe:      tpe,

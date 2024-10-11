@@ -44,7 +44,7 @@ func heuristic(a, b domain.Coord) int {
 	return int(math.Abs(float64(a.Row-b.Row)) + math.Abs(float64(a.Col-b.Col)))
 }
 
-func (a *AStar) ShortestPath(maze domain.Maze) ([]domain.Coord, bool) {
+func (a *AStar) ShortestPath(maze domain.Maze, pathChan chan<- []domain.Coord) ([]domain.Coord, bool) {
 	pq := make(priorityQueue, 0)
 	heap.Init(&pq)
 	heap.Push(&pq, newAStarItem(maze.Data.Start, domain.Coord{}, 0, heuristic(maze.Data.Start, maze.Data.End), 0))
@@ -59,6 +59,9 @@ func (a *AStar) ShortestPath(maze domain.Maze) ([]domain.Coord, bool) {
 		}
 
 		prevCoords[curItem.curCoord] = curItem.prevCoord
+
+		curPath := getPath(prevCoords, curItem.curCoord, maze.Data.Start)
+		pathChan <- curPath
 
 		if curItem.curCoord == maze.Data.End {
 			path := getPath(prevCoords, maze.Data.End, maze.Data.Start)

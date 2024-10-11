@@ -25,42 +25,42 @@ func TestGenerateMaze(t *testing.T) {
 	testCases := []struct {
 		data      domain.MazeData
 		algorithm generator.Algorithm
-		ch        chan domain.PaintingData
+		ch        chan domain.CellPaintingData
 	}{
 		{
 			data:      domain.NewMazeData(5, 5, domain.NewCoord(0, 0), domain.NewCoord(0, 4)),
 			algorithm: generator.NewBacktrack(),
-			ch:        make(chan domain.PaintingData),
+			ch:        make(chan domain.CellPaintingData),
 		},
 		{
 			data:      domain.NewMazeData(10, 10, domain.NewCoord(0, 0), domain.NewCoord(9, 9)),
 			algorithm: generator.NewPrim(),
-			ch:        make(chan domain.PaintingData),
+			ch:        make(chan domain.CellPaintingData),
 		},
 		{
 			data:      domain.NewMazeData(7, 7, domain.NewCoord(0, 3), domain.NewCoord(6, 3)),
 			algorithm: generator.NewBacktrack(),
-			ch:        make(chan domain.PaintingData),
+			ch:        make(chan domain.CellPaintingData),
 		},
 		{
 			data:      domain.NewMazeData(6, 8, domain.NewCoord(0, 7), domain.NewCoord(5, 0)),
 			algorithm: generator.NewPrim(),
-			ch:        make(chan domain.PaintingData),
+			ch:        make(chan domain.CellPaintingData),
 		},
 		{
 			data:      domain.NewMazeData(8, 8, domain.NewCoord(7, 0), domain.NewCoord(7, 7)),
 			algorithm: generator.NewBacktrack(),
-			ch:        make(chan domain.PaintingData),
+			ch:        make(chan domain.CellPaintingData),
 		},
 		{
 			data:      domain.NewMazeData(12, 12, domain.NewCoord(0, 6), domain.NewCoord(11, 11)),
 			algorithm: generator.NewPrim(),
-			ch:        make(chan domain.PaintingData),
+			ch:        make(chan domain.CellPaintingData),
 		},
 		{
 			data:      domain.NewMazeData(15, 10, domain.NewCoord(14, 0), domain.NewCoord(14, 9)),
 			algorithm: generator.NewBacktrack(),
-			ch:        make(chan domain.PaintingData),
+			ch:        make(chan domain.CellPaintingData),
 		},
 	}
 
