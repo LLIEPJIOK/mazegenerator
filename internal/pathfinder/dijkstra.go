@@ -61,13 +61,13 @@ func (d *Dijkstra) ShortestPath(maze domain.Maze) ([]domain.Coord, bool) {
 			newRow, newCol := curItem.curCoord.Row+dRow, curItem.curCoord.Col+dCol
 
 			if min(newCol, newRow) >= 0 && newRow < maze.Data.Height && newCol < maze.Data.Width &&
-				maze.Cells[newRow][newCol] != domain.Wall {
+				maze.Cells[newRow][newCol].IsTraversable() {
 				heap.Push(
 					&pq,
 					newDijkstraItem(
 						domain.NewCoord(newRow, newCol),
 						curItem.curCoord,
-						curItem.distance+int(maze.Cells[newRow][newCol]),
+						curItem.distance+maze.Cells[newRow][newCol].Cost(),
 					),
 				)
 			}

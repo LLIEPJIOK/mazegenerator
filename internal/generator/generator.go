@@ -1,7 +1,9 @@
 package generator
 
 import (
+	"crypto/rand"
 	"fmt"
+	"math/big"
 	"sync"
 	"time"
 
@@ -71,7 +73,7 @@ func (g *Generator) clearDeadEnd(
 					continue
 				}
 
-				if cells[newRowID][newColID] == domain.Passage {
+				if cells[newRowID][newColID] != domain.Wall {
 					cntPassages++
 				}
 			}
@@ -116,7 +118,7 @@ func (g *Generator) generateMazeCellsFromCoord(
 
 func mergeMazes(first, second domain.Maze, drawingChan chan<- domain.PaintingData,
 	processID int,
-) domain.Maze {
+) (domain.Maze, error) {
 	height, width := first.Data.Height, first.Data.Width
 	mergedCells := make([][]domain.CellType, height)
 
@@ -124,17 +126,29 @@ func mergeMazes(first, second domain.Maze, drawingChan chan<- domain.PaintingDat
 		mergedCells[i] = make([]domain.CellType, width)
 
 		for j := range width {
-			if first.Cells[i][j] == domain.Wall {
+			switch {
+			case first.Cells[i][j] == domain.Wall:
 				mergedCells[i][j] = second.Cells[i][j]
-			} else {
+			case second.Cells[i][j] == domain.Wall:
 				mergedCells[i][j] = first.Cells[i][j]
+			default:
+				numb, err := rand.Int(rand.Reader, big.NewInt(2))
+				if err != nil {
+					return domain.Maze{}, fmt.Errorf("generate random number: %w", err)
+				}
+
+				if numb.Int64() == 0 {
+					mergedCells[i][j] = first.Cells[i][j]
+				} else {
+					mergedCells[i][j] = second.Cells[i][j]
+				}
 			}
 
 			drawingChan <- domain.NewPaintingData(i, j, mergedCells[i][j], processID, mergeDelay)
 		}
 	}
 
-	return domain.NewMaze(first.Data, mergedCells)
+	return domain.NewMaze(first.Data, mergedCells), nil
 }
 
 func cellToPaintingData(c cell, id int) domain.PaintingData {
@@ -204,7 +218,31 @@ func (g *Generator) GenerateMaze(
 		return domain.Maze{}, fmt.Errorf("errgroup: %w", err)
 	}
 
-	maze := mergeMazes(startMaze, endMaze, paintingChan, 0)
+	maze, err := mergeMazes(startMaze, endMaze, paintingChan, 0)
+	if err != nil {
+		return domain.Maze{}, fmt.Errorf("merge mazes: %w", err)
+	}
 
 	return maze, nil
+}
+
+func randomCellType() (domain.CellType, error) {
+	numb, err := rand.Int(rand.Reader, big.NewInt(15))
+	if err != nil {
+		return domain.Wall, fmt.Errorf("generate random number: %w", err)
+	}
+
+	switch numb.Int64() {
+	case 0:
+		return domain.Money, nil
+
+	case 1:
+		return domain.River, nil
+
+	case 2:
+		return domain.Sand, nil
+
+	default:
+		return domain.Passage, nil
+	}
 }

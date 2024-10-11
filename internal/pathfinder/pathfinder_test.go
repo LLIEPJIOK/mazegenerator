@@ -38,32 +38,32 @@ func TestFindPathIfPathExists(t *testing.T) {
 				{0, 0, 0, 0, 1},
 			},
 			pathFinder:   pathfinder.NewAStar(),
-			shortestDist: 8,
+			shortestDist: 24,
 		},
 		{
 			data: domain.NewMazeData(5, 5, domain.NewCoord(0, 0), domain.NewCoord(0, 4)),
 			cells: [][]domain.CellType{
-				{1, 1, 1, 1, 1},
+				{1, 2, 1, 3, 1},
 				{0, 0, 0, 0, 1},
 				{0, 0, 0, 0, 1},
 				{0, 0, 0, 0, 1},
 				{0, 0, 0, 0, 1},
 			},
 			pathFinder:   pathfinder.NewDijkstra(),
-			shortestDist: 4,
+			shortestDist: 12,
 		},
 		{
 			data: domain.NewMazeData(6, 6, domain.NewCoord(0, 0), domain.NewCoord(5, 0)),
 			cells: [][]domain.CellType{
-				{1, 1, 1, 1, 1, 1},
-				{0, 0, 0, 1, 0, 1},
-				{0, 1, 0, 1, 0, 1},
-				{0, 1, 0, 0, 0, 1},
-				{0, 1, 1, 1, 0, 1},
-				{1, 1, 1, 1, 1, 1},
+				{1, 1, 1, 2, 2, 2},
+				{0, 0, 0, 4, 0, 2},
+				{0, 4, 4, 4, 0, 2},
+				{0, 4, 0, 0, 0, 2},
+				{0, 2, 2, 2, 0, 2},
+				{1, 1, 4, 2, 2, 2},
 			},
 			pathFinder:   pathfinder.NewAStar(),
-			shortestDist: 15,
+			shortestDist: 25,
 		},
 		{
 			data: domain.NewMazeData(7, 7, domain.NewCoord(0, 3), domain.NewCoord(6, 3)),
@@ -71,36 +71,36 @@ func TestFindPathIfPathExists(t *testing.T) {
 				{1, 1, 1, 1, 1, 1, 1},
 				{0, 0, 0, 1, 0, 0, 1},
 				{1, 1, 0, 1, 0, 1, 1},
-				{1, 1, 0, 0, 0, 1, 0},
+				{1, 1, 0, 0, 0, 1, 4},
 				{1, 1, 1, 1, 0, 1, 1},
 				{1, 0, 0, 0, 0, 0, 1},
 				{1, 1, 1, 1, 1, 1, 1},
 			},
 			pathFinder:   pathfinder.NewDijkstra(),
-			shortestDist: 14,
+			shortestDist: 42,
 		},
 		{
 			data: domain.NewMazeData(4, 4, domain.NewCoord(0, 0), domain.NewCoord(3, 0)),
 			cells: [][]domain.CellType{
 				{1, 1, 0, 1},
 				{0, 1, 0, 1},
-				{0, 1, 0, 0},
-				{1, 1, 1, 1},
+				{0, 2, 0, 0},
+				{1, 2, 1, 1},
 			},
 			pathFinder:   pathfinder.NewAStar(),
-			shortestDist: 5,
+			shortestDist: 11,
 		},
 		{
 			data: domain.NewMazeData(5, 5, domain.NewCoord(0, 0), domain.NewCoord(4, 0)),
 			cells: [][]domain.CellType{
-				{1, 1, 1, 1, 1},
-				{1, 0, 0, 0, 1},
-				{1, 0, 1, 0, 1},
-				{1, 0, 0, 0, 1},
-				{1, 1, 1, 1, 1},
+				{1, 2, 2, 2, 2},
+				{4, 0, 0, 0, 2},
+				{4, 0, 1, 0, 2},
+				{4, 0, 0, 0, 2},
+				{2, 2, 2, 2, 2},
 			},
 			pathFinder:   pathfinder.NewDijkstra(),
-			shortestDist: 4,
+			shortestDist: 12,
 		},
 		{
 			data: domain.NewMazeData(6, 6, domain.NewCoord(0, 0), domain.NewCoord(5, 0)),
@@ -113,7 +113,7 @@ func TestFindPathIfPathExists(t *testing.T) {
 				{1, 1, 1, 1, 1, 1},
 			},
 			pathFinder:   pathfinder.NewAStar(),
-			shortestDist: 11,
+			shortestDist: 33,
 		},
 	}
 
@@ -133,25 +133,22 @@ func TestFindPathIfPathExists(t *testing.T) {
 
 			for i := 1; i < len(path); i++ {
 				coord := path[i]
-				require.NotEqual(
+				require.True(
 					t,
-					domain.Wall,
-					maze.Cells[coord.Row][coord.Col],
-					"path mustn't go throw",
+					maze.Cells[coord.Row][coord.Col].IsTraversable(),
+					"path must go through possible cells",
 				)
 
-				require.Equal(t, 1, squareDist(path[i-1], path[i]))
+				require.Equal(t, 1, squareDist(path[i-1], path[i]), "path must be connected")
 
-				dist += int(maze.Cells[coord.Row][coord.Col])
+				dist += maze.Cells[coord.Row][coord.Col].Cost()
 			}
 
-			require.Equalf(
+			require.Equal(
 				t,
 				testCase.shortestDist,
 				dist,
 				"invalid shortest path",
-				testCase.shortestDist,
-				dist,
 			)
 		})
 	}
@@ -166,10 +163,10 @@ func TestFindPathIfPathNotExists(t *testing.T) {
 		{
 			data: domain.NewMazeData(5, 5, domain.NewCoord(0, 0), domain.NewCoord(4, 4)),
 			cells: [][]domain.CellType{
-				{1, 1, 1, 1, 1},
+				{1, 2, 1, 4, 1},
 				{0, 0, 0, 0, 1},
 				{0, 0, 0, 0, 0},
-				{0, 0, 0, 0, 1},
+				{0, 0, 0, 0, 3},
 				{0, 0, 0, 0, 1},
 			},
 			pathFinder: pathfinder.NewDijkstra(),
@@ -180,9 +177,9 @@ func TestFindPathIfPathNotExists(t *testing.T) {
 				{1, 1, 1, 1, 1, 1, 1},
 				{0, 1, 0, 1, 0, 0, 1},
 				{1, 1, 0, 1, 0, 1, 1},
-				{1, 1, 0, 0, 0, 0, 0},
+				{1, 4, 0, 0, 2, 0, 0},
 				{1, 1, 1, 1, 0, 1, 1},
-				{0, 0, 0, 0, 0, 0, 1},
+				{0, 0, 0, 0, 3, 0, 1},
 				{1, 1, 1, 1, 1, 1, 1},
 			},
 			pathFinder: pathfinder.NewAStar(),
@@ -191,7 +188,7 @@ func TestFindPathIfPathNotExists(t *testing.T) {
 			data: domain.NewMazeData(4, 4, domain.NewCoord(0, 0), domain.NewCoord(3, 0)),
 			cells: [][]domain.CellType{
 				{1, 1, 0, 1},
-				{0, 1, 1, 1},
+				{0, 2, 4, 3},
 				{0, 1, 0, 0},
 				{1, 0, 1, 1},
 			},

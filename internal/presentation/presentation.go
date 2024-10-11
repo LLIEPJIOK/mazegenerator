@@ -19,8 +19,6 @@ Before we start, please keep the following in mind:
  - Maze width and height must be >= 2. For smaller values, we get a simple labyrinth in which the path 
    from the start point to the end point is clearly found
 
-Enjoy the program!
-
 `
 
 	generationAlgorithms = "prim backtrack"
@@ -66,6 +64,16 @@ func New(in io.Reader, out io.Writer) *Presentation {
 		genAlgos:      strings.Fields(generationAlgorithms),
 		pathFindAlgos: strings.Fields(pathFinderAlgorithms),
 	}
+}
+
+func (p *Presentation) writeCellsInfo() {
+	fmt.Println("During the maze generation you can see the following cells:")
+	fmt.Printf(" %s - Passage.\tCost = %d\n", domain.Passage, domain.Passage.Cost())
+	fmt.Printf(" %s - Money.\tCost = %d\n", domain.Money, domain.Money.Cost())
+	fmt.Printf(" %s - Sand.\tCost = %d\n", domain.Sand, domain.Sand.Cost())
+	fmt.Printf(" %s - River.\tCost = %d\n", domain.River, domain.River.Cost())
+	fmt.Printf(" %s - Path.\n", domain.Path)
+	fmt.Printf(" %s - Ambiguous. Its type will be defined further\n\n", domain.Guessing)
 }
 
 func (p *Presentation) getInt(scan *bufio.Scanner, rng rangeNumber) (int, error) {
@@ -212,7 +220,7 @@ CoordLoop:
 				"\033[31mError: start and end points are equal.\033[0m\nType correct end point!",
 			)
 
-		case end.Row != 0 && end.Row != dim.width-1 && end.Col != 0 && end.Col != dim.width-1:
+		case end.Row != 0 && end.Row != dim.height-1 && end.Col != 0 && end.Col != dim.width-1:
 			fmt.Fprintln(p.out, "\033[31mError: end point must lie on the boundary.\033[0m\nType correct end point!")
 
 		default:
@@ -265,6 +273,8 @@ func (p *Presentation) pathFinderAlgorithm(scan *bufio.Scanner) (string, error) 
 
 func (p *Presentation) ProcessInput() (*Input, error) {
 	fmt.Fprint(p.out, greetingMessage)
+	p.writeCellsInfo()
+	fmt.Print("Enjoy the program!\n\n")
 
 	scan := bufio.NewScanner(p.in)
 

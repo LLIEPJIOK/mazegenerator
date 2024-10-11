@@ -71,8 +71,13 @@ func (p *Prim) createMazeCellsFromCoord(
 		if cntWalls+cntBorders < 3 {
 			waitList = waitList[:len(waitList)-cntWalls]
 		} else {
-			cells[randCoord.Row][randCoord.Col] = domain.Passage
-			drawingChan <- newCell(randCoord.Row, randCoord.Col, domain.Passage, drawingDelay)
+			tpe, err := randomCellType()
+			if err != nil {
+				return nil, fmt.Errorf("getting random cell type: %w", err)
+			}
+
+			cells[randCoord.Row][randCoord.Col] = tpe
+			drawingChan <- newCell(randCoord.Row, randCoord.Col, tpe, drawingDelay)
 		}
 	}
 

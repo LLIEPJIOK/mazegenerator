@@ -71,8 +71,8 @@ func (a *AStar) ShortestPath(maze domain.Maze) ([]domain.Coord, bool) {
 			newRow, newCol := curItem.curCoord.Row+dRow, curItem.curCoord.Col+dCol
 
 			if min(newCol, newRow) >= 0 && newRow < maze.Data.Height && newCol < maze.Data.Width &&
-				maze.Cells[newRow][newCol] != domain.Wall {
-				newG := curItem.G + 1
+				maze.Cells[newRow][newCol].IsTraversable() {
+				newG := curItem.G + maze.Cells[newRow][newCol].Cost()
 				newH := heuristic(curItem.curCoord, domain.NewCoord(newRow, newCol))
 				newDist := newG + newH
 				heap.Push(
