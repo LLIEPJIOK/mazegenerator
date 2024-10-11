@@ -67,13 +67,13 @@ func New(in io.Reader, out io.Writer) *Presentation {
 }
 
 func (p *Presentation) writeCellsInfo() {
-	fmt.Println("During the maze generation you can see the following cells:")
-	fmt.Printf(" %s - Passage.\tCost = %d\n", domain.Passage, domain.Passage.Cost())
-	fmt.Printf(" %s - Money.\tCost = %d\n", domain.Money, domain.Money.Cost())
-	fmt.Printf(" %s - Sand.\tCost = %d\n", domain.Sand, domain.Sand.Cost())
-	fmt.Printf(" %s - River.\tCost = %d\n", domain.River, domain.River.Cost())
-	fmt.Printf(" %s - Path.\n", domain.Path)
-	fmt.Printf(" %s - Ambiguous. Its type will be defined further\n\n", domain.Guessing)
+	fmt.Fprintln(p.out, "During the maze generation you can see the following cells:")
+	fmt.Fprintf(p.out, " %s - Passage.\tCost = %d\n", domain.Passage, domain.Passage.Cost())
+	fmt.Fprintf(p.out, " %s - Money.\tCost = %d\n", domain.Money, domain.Money.Cost())
+	fmt.Fprintf(p.out, " %s - Sand.\tCost = %d\n", domain.Sand, domain.Sand.Cost())
+	fmt.Fprintf(p.out, " %s - River.\tCost = %d\n", domain.River, domain.River.Cost())
+	fmt.Fprintf(p.out, " %s - Path.\n", domain.Path)
+	fmt.Fprintf(p.out, " %s - Ambiguous. Its type will be defined further\n\n", domain.Guessing)
 }
 
 func (p *Presentation) getInt(scan *bufio.Scanner, rng rangeNumber) (int, error) {
