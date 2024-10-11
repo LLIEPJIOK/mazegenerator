@@ -92,5 +92,7 @@ func (a *AStar) ShortestPath(maze domain.Maze, pathChan chan<- []domain.Coord) (
 		}
 	}
 
+	pathChan <- nil
+
 	return nil, false
 }
