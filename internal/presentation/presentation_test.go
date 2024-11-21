@@ -6,8 +6,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/es-debug/backend-academy-2024-go-template/internal/domain"
-	"github.com/es-debug/backend-academy-2024-go-template/internal/presentation"
+	"github.com/LLIEPJIOK/mazegenerator/internal/domain"
+	"github.com/LLIEPJIOK/mazegenerator/internal/presentation"
 	"github.com/stretchr/testify/require"
 )
 

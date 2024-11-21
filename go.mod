@@ -1,4 +1,4 @@
-module github.com/es-debug/backend-academy-2024-go-template
+module github.com/LLIEPJIOK/mazegenerator
 
 go 1.22.6
 

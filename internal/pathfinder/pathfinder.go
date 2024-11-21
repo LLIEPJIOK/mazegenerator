@@ -3,7 +3,7 @@ package pathfinder
 import (
 	"slices"
 
-	"github.com/es-debug/backend-academy-2024-go-template/internal/domain"
+	"github.com/LLIEPJIOK/mazegenerator/internal/domain"
 )
 
 func getPath(

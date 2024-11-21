@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/es-debug/backend-academy-2024-go-template/internal/domain"
-	"github.com/es-debug/backend-academy-2024-go-template/internal/generator"
+	"github.com/LLIEPJIOK/mazegenerator/internal/domain"
+	"github.com/LLIEPJIOK/mazegenerator/internal/generator"
 	"github.com/stretchr/testify/require"
 )
 

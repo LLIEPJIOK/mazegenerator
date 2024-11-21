@@ -1,6 +1,6 @@
 package painter
 
-import "github.com/es-debug/backend-academy-2024-go-template/internal/domain"
+import "github.com/LLIEPJIOK/mazegenerator/internal/domain"
 
 type PaintingMaze struct {
 	cells [][]map[int]domain.CellType

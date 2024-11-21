@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/es-debug/backend-academy-2024-go-template/internal/application/maze"
+	"github.com/LLIEPJIOK/mazegenerator/internal/application/maze"
 )
 
 func main() {

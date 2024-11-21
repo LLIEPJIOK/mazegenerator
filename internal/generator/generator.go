@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/es-debug/backend-academy-2024-go-template/internal/domain"
+	"github.com/LLIEPJIOK/mazegenerator/internal/domain"
 	"golang.org/x/sync/errgroup"
 )
 

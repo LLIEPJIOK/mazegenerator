@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/es-debug/backend-academy-2024-go-template/internal/domain"
-	"github.com/es-debug/backend-academy-2024-go-template/internal/generator"
-	"github.com/es-debug/backend-academy-2024-go-template/internal/painter"
-	"github.com/es-debug/backend-academy-2024-go-template/internal/pathfinder"
-	"github.com/es-debug/backend-academy-2024-go-template/internal/presentation"
+	"github.com/LLIEPJIOK/mazegenerator/internal/domain"
+	"github.com/LLIEPJIOK/mazegenerator/internal/generator"
+	"github.com/LLIEPJIOK/mazegenerator/internal/painter"
+	"github.com/LLIEPJIOK/mazegenerator/internal/pathfinder"
+	"github.com/LLIEPJIOK/mazegenerator/internal/presentation"
 )
 
 const pathDrawingDelay = 50 * time.Millisecond
